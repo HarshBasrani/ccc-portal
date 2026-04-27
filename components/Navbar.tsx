@@ -19,7 +19,7 @@ export default function Navbar() {
   if (!initialized) {
     const session = getSession()
     if (session) {
-      setUser({ email: session.email })
+      setUser({ email: session.email, enrollmentNo: session.enrollmentNo })
       setRole(session.role)
     }
     setLoading(false)

@@ -70,12 +70,24 @@ export const signInWithPassword = mutation({
       }
     }
 
+    let enrollmentNo: string | undefined = undefined;
+    if (profile.role === "student") {
+      const student = await ctx.db
+        .query("students")
+        .withIndex("by_profile", (q) => q.eq("profileId", profile._id))
+        .unique();
+      if (student) {
+        enrollmentNo = student.enrollmentNo;
+      }
+    }
+
     return {
       success: true as const,
       profileId: profile._id,
       email: profile.email,
       fullName: profile.fullName || "",
       role: profile.role,
+      enrollmentNo,
     };
   },
 });

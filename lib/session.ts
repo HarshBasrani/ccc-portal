@@ -1,8 +1,9 @@
-﻿export type AppSession = {
+export type AppSession = {
   profileId: string;
   email: string;
   fullName: string;
   role: "admin" | "student";
+  enrollmentNo?: string;
 };
 
 const SESSION_KEY = "ccc_portal_session";

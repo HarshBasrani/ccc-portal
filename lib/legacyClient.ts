@@ -148,13 +148,14 @@ const getSession = () => {
       email: string
       fullName: string
       role: Role
+      enrollmentNo?: string
     }
   } catch {
     return null
   }
 }
 
-const setSession = (session: { profileId: string; email: string; fullName: string; role: Role }) => {
+const setSession = (session: { profileId: string; email: string; fullName: string; role: Role; enrollmentNo?: string }) => {
   if (typeof window === 'undefined') return
   window.localStorage.setItem(SESSION_KEY, JSON.stringify(session))
 }
@@ -376,6 +377,7 @@ export const legacyClient: any = {
           email: result.email,
           fullName: result.fullName,
           role: result.role,
+          enrollmentNo: result.enrollmentNo,
         })
 
         return {
