@@ -13,18 +13,14 @@ export default function Navbar() {
   const [showStudentDropdown, setShowStudentDropdown] = useState(false)
   const [showMobileMenu, setShowMobileMenu] = useState(false)
 
-  // Initialize auth state from session (synchronous read, no effect needed)
-  const [initialized, setInitialized] = useState(false)
-  
-  if (!initialized) {
+  useEffect(() => {
     const session = getSession()
     if (session) {
       setUser({ email: session.email, enrollmentNo: session.enrollmentNo })
       setRole(session.role)
     }
     setLoading(false)
-    setInitialized(true)
-  }
+  }, [])
 
   useEffect(() => {
     if (role !== 'student' || !user?.email) return

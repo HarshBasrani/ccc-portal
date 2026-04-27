@@ -72,10 +72,8 @@ export const signInWithPassword = mutation({
 
     let enrollmentNo: string | undefined = undefined;
     if (profile.role === "student") {
-      const student = await ctx.db
-        .query("students")
-        .withIndex("by_profile", (q) => q.eq("profileId", profile._id))
-        .unique();
+      const students = await ctx.db.query("students").collect();
+      const student = students.find((s) => s.profileId === profile._id || s.email === profile.email);
       if (student) {
         enrollmentNo = student.enrollmentNo;
       }
