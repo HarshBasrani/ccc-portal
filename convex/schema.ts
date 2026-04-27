@@ -1,4 +1,4 @@
-﻿import { defineSchema, defineTable } from "convex/server";
+import { defineSchema, defineTable } from "convex/server";
 import { v } from "convex/values";
 
 export default defineSchema({
@@ -55,7 +55,7 @@ export default defineSchema({
     examDate: v.string(),
     startTime: v.string(),
     endTime: v.string(),
-    durationMinutes: v.number(),
+    durationMinutes: v.optional(v.number()),
     status: v.string(),
     createdAt: v.number(),
     updatedAt: v.number(),

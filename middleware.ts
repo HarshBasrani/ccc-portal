@@ -1,4 +1,4 @@
-﻿import { NextResponse } from 'next/server'
+import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
 // Rate limiting store (in production, use Redis or database)
@@ -17,7 +17,7 @@ function buildCsp(): string {
     convexConnect = ''
   }
 
-  return `default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline'; style-src 'self' 'unsafe-inline' fonts.googleapis.com; font-src 'self' fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'self' *.convex.cloud *.convex.site${convexConnect}; frame-src 'self' www.google.com; object-src 'none'; base-uri 'self';`
+  return `default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline'; style-src 'self' 'unsafe-inline' fonts.googleapis.com; font-src 'self' fonts.gstatic.com; img-src 'self' data: blob: *.convex.site *.convex.cloud *.eu-west-1.convex.site *.eu-west-1.convex.cloud; connect-src 'self' *.convex.cloud *.convex.site${convexConnect}; frame-src 'self' www.google.com; object-src 'none'; base-uri 'self';`
 }
 
 // Security headers

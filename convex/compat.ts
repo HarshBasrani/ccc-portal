@@ -219,6 +219,16 @@ export const listRows = query({
       rows = enriched;
     }
 
+    const siteUrl = process.env.CONVEX_SITE_URL || "https://kindred-husky-370.eu-west-1.convex.site";
+    for (const row of rows) {
+      if (row.photoUrl && typeof row.photoUrl === "string" && !row.photoUrl.startsWith("http")) {
+        row.photoUrl = `${siteUrl}/api/storage/${row.photoUrl}`;
+      }
+      if (row.certificateUrl && typeof row.certificateUrl === "string" && !row.certificateUrl.startsWith("http")) {
+        row.certificateUrl = `${siteUrl}/api/storage/${row.certificateUrl}`;
+      }
+    }
+
     if (args.singleMode === "single") {
       return {
         rows: rows.length > 0 ? [rows[0]] : [],
@@ -254,8 +264,26 @@ export const mutateRows = mutation({
 
     const applyTimestamps = (input: Record<string, unknown>) => {
       const copy = { ...input };
-      if (copy.createdAt === undefined) copy.createdAt = now;
-      copy.updatedAt = now;
+      
+      if (tableName !== "examAssignments") {
+        if (copy.createdAt === undefined) copy.createdAt = now;
+        copy.updatedAt = now;
+      }
+
+      if (tableName === "exams" && copy.durationMinutes === undefined) {
+        const startStr = (copy.startTime as string) || "00:00";
+        const endStr = (copy.endTime as string) || "00:00";
+        const [startH, startM] = startStr.split(':').map(Number);
+        const [endH, endM] = endStr.split(':').map(Number);
+        const startTotal = startH * 60 + startM;
+        const endTotal = endH * 60 + endM;
+        copy.durationMinutes = endTotal >= startTotal ? endTotal - startTotal : (24 * 60 - startTotal) + endTotal;
+      }
+
+      if (tableName === "examAssignments" && copy.assignedAt === undefined) {
+        copy.assignedAt = now;
+      }
+
       return copy;
     };
 
@@ -263,7 +291,7 @@ export const mutateRows = mutation({
       const inputs = Array.isArray(args.values) ? args.values : [args.values ?? {}];
       const ids: string[] = [];
       for (const value of inputs) {
-        const payload = applyTimestamps((value ?? {}) as Record<string, unknown>);
+        let payload = applyTimestamps((value ?? {}) as Record<string, unknown>);
         const id = await ctx.db.insert(tableName, payload as any);
         ids.push(id as unknown as string);
       }
@@ -286,12 +314,44 @@ export const mutateRows = mutation({
     if (args.action === "update") {
       const update = (args.values ?? {}) as Record<string, unknown>;
       for (const row of matches) {
-        await ctx.db.patch(row._id as any, { ...update, updatedAt: now } as any);
+        let payload = { ...update };
+        
+        if (tableName === "exams" && payload.durationMinutes === undefined && payload.startTime && payload.endTime) {
+          const startStr = (payload.startTime as string);
+          const endStr = (payload.endTime as string);
+          const [startH, startM] = startStr.split(':').map(Number);
+          const [endH, endM] = endStr.split(':').map(Number);
+          const startTotal = startH * 60 + startM;
+          const endTotal = endH * 60 + endM;
+          payload.durationMinutes = endTotal >= startTotal ? endTotal - startTotal : (24 * 60 - startTotal) + endTotal;
+        }
+
+        const patchPayload = { ...payload };
+        if (tableName !== "examAssignments") {
+          patchPayload.updatedAt = now;
+        }
+
+        await ctx.db.patch(row._id as any, patchPayload as any);
       }
       return { ids: matches.map((r) => r._id as string) };
     }
 
     const value = (args.values ?? {}) as Record<string, unknown>;
+    
+    if (tableName === "exams" && value.durationMinutes === undefined) {
+      const startStr = (value.startTime as string) || "00:00";
+      const endStr = (value.endTime as string) || "00:00";
+      const [startH, startM] = startStr.split(':').map(Number);
+      const [endH, endM] = endStr.split(':').map(Number);
+      const startTotal = startH * 60 + startM;
+      const endTotal = endH * 60 + endM;
+      value.durationMinutes = endTotal >= startTotal ? endTotal - startTotal : (24 * 60 - startTotal) + endTotal;
+    }
+
+    if (tableName === "examAssignments" && value.assignedAt === undefined) {
+      value.assignedAt = now;
+    }
+
     const conflictFields = args.onConflict ?? [];
 
     if (value._id) {
@@ -299,7 +359,11 @@ export const mutateRows = mutation({
       if (existing) {
         const updatePayload = { ...value } as Record<string, unknown>;
         delete updatePayload._id;
-        await ctx.db.patch(value._id as any, { ...updatePayload, updatedAt: now } as any);
+        const patchPayload = { ...updatePayload };
+        if (tableName !== "examAssignments") {
+          patchPayload.updatedAt = now;
+        }
+        await ctx.db.patch(value._id as any, patchPayload as any);
         return { ids: [value._id as string] };
       }
     }
@@ -310,7 +374,11 @@ export const mutateRows = mutation({
       );
 
       if (existing) {
-        await ctx.db.patch(existing._id as any, { ...value, updatedAt: now } as any);
+        const patchPayload = { ...value };
+        if (tableName !== "examAssignments") {
+          patchPayload.updatedAt = now;
+        }
+        await ctx.db.patch(existing._id as any, patchPayload as any);
         return { ids: [existing._id as string] };
       }
     }

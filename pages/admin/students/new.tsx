@@ -265,7 +265,19 @@ export default function AdminAddStudentPage() {
                 </div>
               </div>
 
-              {/* Row 4 – Address (full-width textarea) */}
+              {/* Row 3.5 – Date of Birth */}
+              <div className="row mb-3">
+                <div className="col-md-6">
+                  <label className="form-label fw-bold">Date of Birth</label>
+                  <input
+                    type="date"
+                    className="form-control"
+                    value={dob}
+                    onChange={e => setDob(e.target.value)}
+                    required
+                  />
+                </div>
+              </div>
               <div className="mb-3">
                 <label className="form-label fw-bold">Address</label>
                 <textarea
