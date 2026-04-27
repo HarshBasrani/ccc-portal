@@ -22,6 +22,42 @@ export default function AdminStudents() {
   const [students, setStudents] = useState<StudentRow[]>([])
   const [searchTerm, setSearchTerm] = useState('')
 
+  const fetchStudents = async () => {
+    const { data, error: fetchError } = await legacyClient
+      .from('students')
+      .select(`
+        id,
+        profile_id,
+        enrollment_no,
+        status,
+        created_at,
+        profiles:profile_id ( full_name, email )
+      `)
+      .order('created_at', { ascending: false })
+
+    if (fetchError) {
+      setError(fetchError.message)
+      return
+    }
+
+    if (data) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const formatted: StudentRow[] = data.map((student: any) => {
+        const profile = Array.isArray(student.profiles) ? student.profiles[0] : student.profiles
+        return {
+          id: student.id,
+          profile_id: student.profile_id,
+          full_name: profile?.full_name || null,
+          email: profile?.email || null,
+          enrollment_no: student.enrollment_no || null,
+          status: student.status || 'pending',
+          created_at: student.created_at
+        }
+      })
+      setStudents(formatted)
+    }
+  }
+
   useEffect(() => {
     const checkAdminAndFetch = async () => {
       const { data: { user } } = await legacyClient.auth.getUser()
@@ -47,42 +83,9 @@ export default function AdminStudents() {
     }
 
     checkAdminAndFetch()
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [router])
 
-  const fetchStudents = async () => {
-    const { data, error: fetchError } = await legacyClient
-      .from('students')
-      .select(`
-        id,
-        profile_id,
-        enrollment_no,
-        status,
-        created_at,
-        profiles:profile_id ( full_name, email )
-      `)
-      .order('created_at', { ascending: false })
-
-    if (fetchError) {
-      setError(fetchError.message)
-      return
-    }
-
-    if (data) {
-      const formatted: StudentRow[] = data.map((student: any) => {
-        const profile = Array.isArray(student.profiles) ? student.profiles[0] : student.profiles
-        return {
-          id: student.id,
-          profile_id: student.profile_id,
-          full_name: profile?.full_name || null,
-          email: profile?.email || null,
-          enrollment_no: student.enrollment_no || null,
-          status: student.status || 'pending',
-          created_at: student.created_at
-        }
-      })
-      setStudents(formatted)
-    }
-  }
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-IN', {

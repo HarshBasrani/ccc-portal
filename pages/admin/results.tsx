@@ -20,33 +20,6 @@ export default function AdminResults() {
   const [results, setResults] = useState<Result[]>([])
   const [searchTerm, setSearchTerm] = useState('')
 
-  useEffect(() => {
-    const checkAdminAccess = async () => {
-      const { data: { user } } = await legacyClient.auth.getUser()
-
-      if (!user) {
-        router.replace('/login')
-        return
-      }
-
-      const { data: profile } = await legacyClient
-        .from('profiles')
-        .select('role')
-        .eq('id', user.id)
-        .single()
-
-      if (profile?.role !== 'admin') {
-        router.replace('/student/dashboard')
-        return
-      }
-
-      await fetchResults()
-      setLoading(false)
-    }
-
-    checkAdminAccess()
-  }, [router])
-
   const fetchResults = async () => {
     const { data, error } = await legacyClient
       .from('exam_attempts')
@@ -84,34 +57,75 @@ export default function AdminResults() {
 
       // Create lookup maps
       const studentMap = new Map()
-      studentsData?.forEach((s: any) => {
-        const profile = Array.isArray(s.profiles) ? s.profiles[0] : s.profiles
-        studentMap.set(s.id, {
-          name: profile?.full_name || '-',
-          email: profile?.email || '-'
+      if (studentsData) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        studentsData.forEach((s: any) => {
+          const profile = Array.isArray(s.profiles) ? s.profiles[0] : s.profiles
+          studentMap.set(s.id, {
+            name: profile?.full_name || 'Unknown',
+            email: profile?.email || '-'
+          })
         })
-      })
+      }
 
       const examMap = new Map()
-      examsData?.forEach((e: any) => {
-        examMap.set(e.id, e.name)
-      })
+      if (examsData) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        examsData.forEach((e: any) => {
+          examMap.set(e.id, e.name || 'Unknown Exam')
+        })
+      }
 
-      const formatted = data.map((attempt: any) => {
-        const student = studentMap.get(attempt.student_id) || { name: '-', email: '-' }
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const formatted: Result[] = data.map((r: any) => {
+        const student = studentMap.get(r.student_id) || { name: 'Unknown', email: '-' }
+        const examName = examMap.get(r.exam_id) || 'Unknown Exam'
+
         return {
-          id: attempt.id,
+          id: r.id,
           student_name: student.name,
-          student_email: student.email,
-          exam_name: examMap.get(attempt.exam_id) || '-',
-          score: attempt.score || 0,
-          percentage: attempt.percentage || 0,
-          submitted_at: attempt.submitted_at
+          enrollment_number: student.email, // Fallback or placeholder if enrollment_no is not available
+          exam_name: examName,
+          score: r.score ?? 0,
+          percentage: r.percentage ?? 0,
+          total_marks: 100,
+          submitted_at: r.submitted_at
         }
       })
+
       setResults(formatted)
     }
   }
+
+  useEffect(() => {
+    const checkAdminAccess = async () => {
+      const { data: { user } } = await legacyClient.auth.getUser()
+
+      if (!user) {
+        router.replace('/login')
+        return
+      }
+
+      const { data: profile } = await legacyClient
+        .from('profiles')
+        .select('role')
+        .eq('id', user.id)
+        .single()
+
+      if (profile?.role !== 'admin') {
+        router.replace('/student/dashboard')
+        return
+      }
+
+      await fetchResults()
+      setLoading(false)
+    }
+
+    checkAdminAccess()
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [router])
+
+
 
   const formatDate = (dateString: string) => {
     if (!dateString) return '-'
