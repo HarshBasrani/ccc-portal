@@ -76,6 +76,12 @@ export default function NewExam() {
     setError(null)
 
     try {
+      const [startH, startM] = formData.start_time.split(':').map(Number)
+      const [endH, endM] = formData.end_time.split(':').map(Number)
+      const startTotal = startH * 60 + startM
+      const endTotal = endH * 60 + endM
+      const durationMinutes = endTotal >= startTotal ? endTotal - startTotal : (24 * 60 - startTotal) + endTotal
+
       const { error: insertError } = await legacyClient
         .from('exams')
         .insert({
@@ -84,6 +90,7 @@ export default function NewExam() {
           exam_date: formData.exam_date,
           start_time: formData.start_time,
           end_time: formData.end_time,
+          duration_minutes: durationMinutes,
           status: 'scheduled'
         })
 
