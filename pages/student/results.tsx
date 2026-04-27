@@ -85,6 +85,7 @@ export default function StudentResults() {
       if (fetchError) {
         setError(fetchError.message)
       } else if (data) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const formatted = data.map((r: any) => {
           const examsData = Array.isArray(r.exams) ? r.exams[0] : r.exams
           return {

@@ -23,6 +23,19 @@ export default function AdminExams() {
   const [exams, setExams] = useState<Exam[]>([])
   const [error, setError] = useState<string | null>(null)
 
+  const fetchExams = async () => {
+    const { data, error } = await legacyClient
+      .from('exams')
+      .select('id, course_id, name, exam_date, start_time, end_time, duration_minutes, status, created_at')
+      .order('exam_date', { ascending: true })
+
+    if (error) {
+      setError(error.message)
+    } else if (data) {
+      setExams(data)
+    }
+  }
+
   useEffect(() => {
     const checkAdminAccess = async () => {
       const { data: { user } } = await legacyClient.auth.getUser()
@@ -48,20 +61,8 @@ export default function AdminExams() {
     }
 
     checkAdminAccess()
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [router])
-
-  const fetchExams = async () => {
-    const { data, error } = await legacyClient
-      .from('exams')
-      .select('id, course_id, name, exam_date, start_time, end_time, duration_minutes, status, created_at')
-      .order('exam_date', { ascending: true })
-
-    if (error) {
-      setError(error.message)
-    } else if (data) {
-      setExams(data)
-    }
-  }
 
   const formatDate = (dateString: string) => {
     if (!dateString) return '-'

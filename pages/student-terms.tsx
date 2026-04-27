@@ -1,4 +1,4 @@
-﻿import Head from 'next/head'
+import Head from 'next/head'
 
 export default function StudentTerms() {
   return (
@@ -115,7 +115,7 @@ export default function StudentTerms() {
                     <h2 className="h3 text-primary mb-3">8. Rescheduling and Cancellation</h2>
                     <div className="ps-3">
                       <p>8.1. Examination rescheduling requests must be made at least 48 hours in advance.</p>
-                      <p>8.2. Rescheduling fees may apply as per the center's policy.</p>
+                      <p>8.2. Rescheduling fees may apply as per the center&apos;s policy.</p>
                       <p>8.3. Emergency rescheduling will be considered on a case-by-case basis.</p>
                       <p>8.4. No-shows without prior notice will forfeit their examination fees.</p>
                     </div>
@@ -135,7 +135,7 @@ export default function StudentTerms() {
                     <h2 className="h3 text-primary mb-3">10. Limitation of Liability</h2>
                     <div className="ps-3">
                       <p>10.1. Infonix Computers will not be liable for any indirect or consequential damages.</p>
-                      <p>10.2. The company's liability is limited to the examination fees paid by the student.</p>
+                      <p>10.2. The company&apos;s liability is limited to the examination fees paid by the student.</p>
                       <p>10.3. Students participate in examinations at their own risk.</p>
                       <p>10.4. Force majeure events are beyond the control of Infonix Computers.</p>
                     </div>

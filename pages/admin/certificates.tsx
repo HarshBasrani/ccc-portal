@@ -67,6 +67,7 @@ export default function AdminCertificates() {
         console.error('Error fetching certificates:', error)
         setCertificates([])
       } else {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const formatted: Certificate[] = (data || []).map((cert: any) => ({
           id: cert.id,
           si_number: cert.si_number,

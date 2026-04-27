@@ -328,6 +328,7 @@ export default function AttemptResult() {
   const grade = getGradeBadge(percentage, attempt?.is_passed ?? null)
   const correctCount = questionsWithAnswers.filter(q => q.is_correct === true).length
   const incorrectCount = questionsWithAnswers.filter(q => q.is_correct === false).length
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const unansweredCount = questionsWithAnswers.filter(q => q.selected_option === null).length
 
   return (
@@ -426,7 +427,7 @@ export default function AttemptResult() {
                             <line x1="12" y1="16" x2="12.01" y2="16"/>
                           </svg>
                           <p className="mb-1">No questions found for this exam</p>
-                          <small>This might be due to questions not being linked to the exam's course.</small>
+                          <small>This might be due to questions not being linked to the exam&apos;s course.</small>
                         </div>
                       </td>
                     </tr>

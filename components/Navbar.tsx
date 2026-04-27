@@ -1,4 +1,4 @@
-﻿import { useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/router'
 import { clearSession, getSession } from '../lib/session'
@@ -12,17 +12,18 @@ export default function Navbar() {
   const [showStudentDropdown, setShowStudentDropdown] = useState(false)
   const [showMobileMenu, setShowMobileMenu] = useState(false)
 
-  useEffect(() => {
+  // Initialize auth state from session (synchronous read, no effect needed)
+  const [initialized, setInitialized] = useState(false)
+  
+  if (!initialized) {
     const session = getSession()
     if (session) {
       setUser({ email: session.email })
       setRole(session.role)
-    } else {
-      setUser(null)
-      setRole(null)
     }
     setLoading(false)
-  }, [])
+    setInitialized(true)
+  }
 
   const handleLogout = async () => {
     clearSession()

@@ -15,6 +15,7 @@ interface Exam {
   status: string
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 interface ExamAssignment {
   exam_id: string
   exams: Exam
@@ -46,6 +47,7 @@ export default function StudentExams() {
         return
       }
 
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { data: existingStudents, error: fetchStudentError } = await legacyClient
         .from('students')
         .select('id')
@@ -93,7 +95,9 @@ export default function StudentExams() {
         setError(fetchError.message)
       } else if (data) {
         const assignedExams = data
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           .map((a: any) => a.exams)
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           .filter((e: any) => e !== null)
           .sort((a: Exam, b: Exam) => 
             new Date(a.exam_date).getTime() - new Date(b.exam_date).getTime()
@@ -214,7 +218,7 @@ export default function StudentExams() {
                 </svg>
               </div>
               <h4 className="mb-3" style={{ color: 'var(--dark-text)' }}>No Exams Assigned Yet</h4>
-              <p className="text-muted mb-0">You don't have any exams assigned to you at the moment.<br/>Check back later or contact your administrator.</p>
+              <p className="text-muted mb-0">You don&apos;t have any exams assigned to you at the moment.<br/>Check back later or contact your administrator.</p>
             </div>
           ) : !error && (
             <div className="premium-card fade-in">

@@ -73,8 +73,8 @@ export default function StudentLoginPage() {
 
       router.push('/student/dashboard')
 
-    } catch (err: any) {
-      setError(err.message || 'Something went wrong.')
+    } catch (err: unknown) {
+      setError((err instanceof Error ? err.message : String(err)) || 'Something went wrong.')
     } finally {
       setLoading(false)
     }

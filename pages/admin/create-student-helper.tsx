@@ -10,6 +10,7 @@ export default function CreateStudentHelper() {
   const [message, setMessage] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [userEmail, setUserEmail] = useState('')
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [userInfo, setUserInfo] = useState<any>(null)
 
   const searchUser = async () => {
@@ -54,8 +55,8 @@ export default function CreateStudentHelper() {
         setMessage(`User found: ${profile.full_name}. No student record exists - ready to create.`)
       }
 
-    } catch (error: any) {
-      setError('Search failed: ' + error.message)
+    } catch (error: unknown) {
+      setError('Search failed: ' + (error instanceof Error ? error.message : String(error)))
     } finally {
       setLoading(false)
     }
@@ -95,8 +96,8 @@ export default function CreateStudentHelper() {
       setUserInfo(null)
       setUserEmail('')
 
-    } catch (error: any) {
-      setError('Failed to create student record: ' + error.message)
+    } catch (error: unknown) {
+      setError('Failed to create student record: ' + (error instanceof Error ? error.message : String(error)))
     } finally {
       setLoading(false)
     }
@@ -200,9 +201,9 @@ export default function CreateStudentHelper() {
                     <div className="small text-muted">
                       <ol>
                         <li>Enter the email address of an existing user account</li>
-                        <li>Click "Search User" to find their profile</li>
+                        <li>Click &quot;Search User&quot; to find their profile</li>
                         <li>If no student record exists, you can create one</li>
-                        <li>The student will be created with "approved" status</li>
+                        <li>The student will be created with &quot;approved&quot; status</li>
                         <li>They can then access exams immediately</li>
                       </ol>
                     </div>

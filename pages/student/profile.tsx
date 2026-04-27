@@ -1,4 +1,4 @@
-﻿import { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import Head from 'next/head';
 import { legacyClient } from '../../lib/legacyClient';
@@ -30,10 +30,6 @@ export default function StudentProfile() {
   const [loading, setLoading] = useState(true);
   const [student, setStudent] = useState<StudentProfile | null>(null);
   const [errorMsg, setErrorMsg] = useState('');
-
-  useEffect(() => {
-    checkAuthAndLoadProfile();
-  }, []);
 
   const checkAuthAndLoadProfile = async () => {
     const { data: { user } } = await legacyClient.auth.getUser();
@@ -94,6 +90,11 @@ export default function StudentProfile() {
 
     setLoading(false);
   };
+
+  useEffect(() => {
+    checkAuthAndLoadProfile();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const formatDate = (dateString: string) => {
     if (!dateString) return 'N/A';
@@ -185,11 +186,11 @@ export default function StudentProfile() {
                             <span className="profile-info-value">{student.first_name} {student.last_name}</span>
                           </div>
                           <div className="profile-info-row">
-                            <span className="profile-info-label">Father's Name</span>
+                            <span className="profile-info-label">Father&apos;s Name</span>
                             <span className="profile-info-value">{student.father_name || 'N/A'}</span>
                           </div>
                           <div className="profile-info-row">
-                            <span className="profile-info-label">Mother's Name</span>
+                            <span className="profile-info-label">Mother&apos;s Name</span>
                             <span className="profile-info-value">{student.mother_name || 'N/A'}</span>
                           </div>
                           <div className="profile-info-row">

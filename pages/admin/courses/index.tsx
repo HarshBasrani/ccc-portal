@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/router'
 import Head from 'next/head'
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import Link from 'next/link'
 import { legacyClient } from '../../../lib/legacyClient'
 
@@ -97,8 +98,8 @@ export default function AdminCourses() {
       setNewDesc('')
       setShowAddForm(false)
       await fetchCourses()
-    } catch (err: any) {
-      setError(err.message || 'Failed to add course')
+    } catch (err: unknown) {
+      setError((err instanceof Error ? err.message : String(err)) || 'Failed to add course')
     } finally {
       setSubmitting(false)
     }
@@ -125,8 +126,8 @@ export default function AdminCourses() {
       setSuccess(`Course updated successfully!`)
       setEditId(null)
       await fetchCourses()
-    } catch (err: any) {
-      setError(err.message || 'Failed to update course')
+    } catch (err: unknown) {
+      setError((err instanceof Error ? err.message : String(err)) || 'Failed to update course')
     } finally {
       setSubmitting(false)
     }
@@ -148,8 +149,8 @@ export default function AdminCourses() {
 
       setSuccess(`Course "${courseName}" deleted.`)
       await fetchCourses()
-    } catch (err: any) {
-      setError(err.message || 'Failed to delete course')
+    } catch (err: unknown) {
+      setError((err instanceof Error ? err.message : String(err)) || 'Failed to delete course')
     }
   }
 

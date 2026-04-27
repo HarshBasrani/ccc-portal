@@ -65,8 +65,8 @@ export default function StudentProfileSetup() {
         setEnrollmentNo(`CCC${year}${randomNum}`)
 
         setLoading(false)
-      } catch (error: any) {
-        setError('An error occurred: ' + error.message)
+      } catch (error: unknown) {
+        setError('An error occurred: ' + (error instanceof Error ? error.message : String(error)))
         setLoading(false)
       }
     }
@@ -104,8 +104,8 @@ export default function StudentProfileSetup() {
         router.push('/student/exams')
       }, 3000)
 
-    } catch (error: any) {
-      setError('Failed to create student record: ' + error.message)
+    } catch (error: unknown) {
+      setError('Failed to create student record: ' + (error instanceof Error ? error.message : String(error)))
     } finally {
       setCreating(false)
     }

@@ -1,4 +1,4 @@
-﻿// lib/security.ts
+// lib/security.ts
 import { legacyClient } from './legacyClient'
 import crypto from 'crypto'
 
@@ -100,6 +100,7 @@ export const validateSession = async (userId: string): Promise<boolean> => {
 }
 
 // Audit logging
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const auditLog = async (action: string, userId: string, details: any = {}) => {
   try {
     await legacyClient.from('audit_logs').insert({

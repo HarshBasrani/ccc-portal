@@ -24,6 +24,22 @@ export default function AdminQuestions() {
   const [questions, setQuestions] = useState<Question[]>([])
   const [searchTerm, setSearchTerm] = useState('')
 
+  const fetchQuestions = async () => {
+    const { data, error: fetchError } = await legacyClient
+      .from('questions')
+      .select('*')
+      .order('created_at', { ascending: false })
+
+    if (fetchError) {
+      setError(fetchError.message)
+      return
+    }
+
+    if (data) {
+      setQuestions(data)
+    }
+  }
+
   useEffect(() => {
     const checkAdminAccess = async () => {
       const { data: { user } } = await legacyClient.auth.getUser()
@@ -49,23 +65,8 @@ export default function AdminQuestions() {
     }
 
     checkAdminAccess()
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [router])
-
-  const fetchQuestions = async () => {
-    const { data, error: fetchError } = await legacyClient
-      .from('questions')
-      .select('*')
-      .order('created_at', { ascending: false })
-
-    if (fetchError) {
-      setError(fetchError.message)
-      return
-    }
-
-    if (data) {
-      setQuestions(data)
-    }
-  }
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-IN', {

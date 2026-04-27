@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useRouter } from 'next/router'
 import Head from 'next/head'
 import { db } from '../../../lib/dbClient'
@@ -70,17 +70,21 @@ export default function CertificatePrint() {
     photo: { top: 20, right: 25 }
   })
 
-  // Generate serial number from username (SI.No)
-  const generateSerial = () => {
-    if (student?.username) {
-      return student.username
-    }
-    // Fallback if username is not available
+  // Pre-compute stable random fallback serial (avoids impure Math.random in render)
+  const fallbackSerial = useMemo(() => {
     const date = new Date()
     const year = date.getFullYear()
     const month = String(date.getMonth() + 1).padStart(2, '0')
     const random = Math.floor(Math.random() * 1000).toString().padStart(3, '0')
     return `CCC/${year}/${month}/${random}`
+  }, [])
+
+  // Generate serial number from username (SI.No)
+  const generateSerial = () => {
+    if (student?.username) {
+      return student.username
+    }
+    return fallbackSerial
   }
 
   // Construct full student name from database fields
@@ -127,7 +131,9 @@ export default function CertificatePrint() {
             right: Math.max(0, Math.min(200, prev.photo.right - deltaXmm))
           }
         : {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             top: Math.max(0, Math.min(290, (prev[isDragging as keyof typeof prev] as any).top + deltaYmm)),
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             left: Math.max(0, Math.min(200, (prev[isDragging as keyof typeof prev] as any).left + deltaXmm))
           }
     }))
@@ -208,12 +214,14 @@ export default function CertificatePrint() {
               const fontMatch = styles.match(/font-size:\s*([0-9.]+)px/)
               
               if (fieldName in newPositions) {
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 const currentPos = newPositions[fieldName as keyof typeof positions] as any
                 if (topMatch) currentPos.top = parseFloat(topMatch[1])
                 if (leftMatch) currentPos.left = parseFloat(leftMatch[1])
               }
               
               if (fontMatch && fieldName in newFieldSizes) {
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 const currentSize = newFieldSizes[fieldName as keyof typeof fieldSizes] as any
                 if ('fontSize' in currentSize) {
                   currentSize.fontSize = parseFloat(fontMatch[1])
@@ -227,7 +235,7 @@ export default function CertificatePrint() {
       setPositions(newPositions)
       setFieldSizes(newFieldSizes)
       alert(' CSS applied successfully!')
-    } catch (error) {
+    } catch (_error) {
       alert(' Error parsing CSS. Please check the format.')
     }
   }
@@ -340,7 +348,7 @@ export default function CertificatePrint() {
         }
 
         setLoading(false)
-      } catch (err) {
+      } catch (_err) {
         setError('Failed to load data')
         setLoading(false)
       }

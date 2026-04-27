@@ -53,7 +53,7 @@ export default function About() {
                     <p className="lead" style={{ color: 'var(--dark-text)', lineHeight: '1.8' }}>
                       Welcome to Excellence Computer Institute, a premier destination for quality computer education 
                       and professional certification programs. We are committed to providing comprehensive training 
-                      that empowers individuals with the digital skills needed in today's technology-driven world.
+                      that empowers individuals with the digital skills needed in today&apos;s technology-driven world.
                     </p>
                   </div>
 

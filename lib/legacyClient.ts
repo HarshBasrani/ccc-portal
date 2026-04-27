@@ -1,4 +1,5 @@
-﻿import { ConvexHttpClient } from 'convex/browser'
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { ConvexHttpClient } from 'convex/browser'
 
 type LegacyResponse<T = unknown> = {
   data: T
