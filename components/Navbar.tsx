@@ -2,10 +2,11 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/router'
 import { clearSession, getSession } from '../lib/session'
+import { legacyClient } from '../lib/legacyClient'
 
 export default function Navbar() {
   const router = useRouter()
-  const [user, setUser] = useState<{ email?: string } | null>(null)
+  const [user, setUser] = useState<{ email?: string; enrollmentNo?: string } | null>(null)
   const [role, setRole] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [showAdminDropdown, setShowAdminDropdown] = useState(false)
@@ -24,6 +25,28 @@ export default function Navbar() {
     setLoading(false)
     setInitialized(true)
   }
+
+  useEffect(() => {
+    if (role !== 'student' || !user?.email) return
+
+    const fetchEnrollment = async () => {
+      try {
+        const { data } = await legacyClient
+          .from('students')
+          .select('enrollment_no')
+          .eq('email', user.email)
+          .maybeSingle()
+        
+        if (data?.enrollment_no) {
+          setUser(prev => prev ? { ...prev, enrollmentNo: data.enrollment_no } : null)
+        }
+      } catch (error) {
+        console.error('Failed to fetch enrollment number', error)
+      }
+    }
+
+    fetchEnrollment()
+  }, [role, user?.email])
 
   const handleLogout = async () => {
     clearSession()
@@ -244,7 +267,7 @@ export default function Navbar() {
                     {user.email?.charAt(0)?.toUpperCase() || 'U'}
                   </div>
                   <span className="user-name">
-                    {user.email?.split('@')[0]}
+                    {role === 'student' && user.enrollmentNo ? user.enrollmentNo : user.email?.split('@')[0]}
                   </span>
                 </div>
                 <button className="btn-logout" onClick={handleLogout}>
@@ -303,7 +326,7 @@ export default function Navbar() {
                   <div className="user-avatar">
                     {user.email?.charAt(0)?.toUpperCase() || 'U'}
                   </div>
-                  <span>{user.email?.split('@')[0]}</span>
+                  <span>{role === 'student' && user.enrollmentNo ? user.enrollmentNo : user.email?.split('@')[0]}</span>
                 </div>
                 <button className="mobile-logout" onClick={handleLogout}>Logout</button>
               </div>
