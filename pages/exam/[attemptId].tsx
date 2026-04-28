@@ -48,6 +48,25 @@ export default function ExamEngine() {
   const router = useRouter()
   const { attemptId } = router.query
 
+  const deterministicShuffle = (array: any[], seed: string) => {
+    if (!array || array.length === 0) return [];
+    let m = 0x80000000, a = 1103515245, c = 12345;
+    let state = 0;
+    for (let i = 0; i < seed.length; i++) {
+      state = (state + seed.charCodeAt(i)) % m;
+    }
+    const random = () => {
+      state = (a * state + c) % m;
+      return state / (m - 1);
+    }
+    let clone = [...array];
+    for (let i = clone.length - 1; i > 0; i--) {
+      const j = Math.floor(random() * (i + 1));
+      [clone[i], clone[j]] = [clone[j], clone[i]];
+    }
+    return clone;
+  }
+
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
@@ -279,7 +298,9 @@ export default function ExamEngine() {
           return
         }
 
-        setQuestions(questionData)
+        const shuffled = deterministicShuffle(questionData || [], attemptId as string);
+        const selectedQuestions = shuffled.slice(0, 100);
+        setQuestions(selectedQuestions)
 
         // Load existing answers
         const { data: answerData } = await db
@@ -738,7 +759,9 @@ export default function ExamEngine() {
         return
       }
 
-      setQuestions(questionsData || [])
+      const shuffledQuestions = deterministicShuffle(questionsData || [], attemptId as string);
+      const selectedQuestions = shuffledQuestions.slice(0, 100);
+      setQuestions(selectedQuestions)
 
       //  PART 4  LOAD SAVED ANSWERS & RESTORE FROM AUTOSAVE
       const { data: existingAnswers } = await db
