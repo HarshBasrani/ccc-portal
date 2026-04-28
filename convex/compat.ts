@@ -215,7 +215,18 @@ export const listRows = query({
       const enriched: Array<Record<string, unknown>> = [];
       for (const row of rows) {
         const profile = row.profileId ? await ctx.db.get(row.profileId as any) : null;
-        enriched.push({ ...row, profiles: profile });
+        let photoUrl = row.photoUrl as string | undefined;
+        if (photoUrl) {
+          const match = photoUrl.match(/\/api\/storage\/([a-zA-Z0-9-]+)/);
+          const storageId = match ? match[1] : photoUrl;
+          try {
+            const resolvedUrl = await ctx.storage.getUrl(storageId);
+            if (resolvedUrl) photoUrl = resolvedUrl;
+          } catch (e) {
+            // fallback
+          }
+        }
+        enriched.push({ ...row, profiles: profile, photoUrl });
       }
       rows = enriched;
     }
