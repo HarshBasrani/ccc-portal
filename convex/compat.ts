@@ -215,6 +215,7 @@ export const listRows = query({
       const enriched: Array<Record<string, unknown>> = [];
       for (const row of rows) {
         const profile = row.profileId ? await ctx.db.get(row.profileId as any) : null;
+        
         let photoUrl = row.photoUrl as string | undefined;
         if (photoUrl) {
           const match = photoUrl.match(/\/api\/storage\/([a-zA-Z0-9-]+)/);
@@ -226,7 +227,20 @@ export const listRows = query({
             // fallback
           }
         }
-        enriched.push({ ...row, profiles: profile, photoUrl });
+
+        let certificateUrl = row.certificateUrl as string | undefined;
+        if (certificateUrl) {
+          const match = certificateUrl.match(/\/api\/storage\/([a-zA-Z0-9-]+)/);
+          const storageId = match ? match[1] : certificateUrl;
+          try {
+            const resolvedUrl = await ctx.storage.getUrl(storageId);
+            if (resolvedUrl) certificateUrl = resolvedUrl;
+          } catch (e) {
+            // fallback
+          }
+        }
+
+        enriched.push({ ...row, profiles: profile, photoUrl, certificateUrl });
       }
       rows = enriched;
     }
@@ -240,7 +254,7 @@ export const listRows = query({
       rows = enriched;
     }
 
-    const siteUrl = process.env.CONVEX_SITE_URL || "https://kindred-husky-370.eu-west-1.convex.site";
+    const siteUrl = process.env.CONVEX_SITE_URL || "https://oceanic-puma-27.eu-west-1.convex.site";
     for (const row of rows) {
       if (row.photoUrl && typeof row.photoUrl === "string" && !row.photoUrl.startsWith("http")) {
         row.photoUrl = `${siteUrl}/api/storage/${row.photoUrl}`;

@@ -193,30 +193,42 @@ export default function NewQuestion() {
 
   const validateExcelRow = (row: any, coursesMap: Record<string, string>) => {
     const errors: string[] = []
-    if (!row.course || !row.course.toString().trim()) errors.push('Course required')
     
-    const qEn = row.question_en ? row.question_en.toString().trim() : ''
-    const qGu = row.question_gu ? row.question_gu.toString().trim() : ''
+    const getVal = (keys: string[]) => {
+      for (const key of keys) {
+        const lowerKey = key.toLowerCase().trim()
+        const foundKey = Object.keys(row).find(k => k.toLowerCase().trim() === lowerKey)
+        if (foundKey !== undefined && row[foundKey] !== undefined && row[foundKey] !== null) {
+          return row[foundKey].toString().trim()
+        }
+      }
+      return ''
+    }
+
+    const courseVal = getVal(['course'])
+    if (!courseVal) errors.push('Course required')
+    
+    const qEn = getVal(['question_en', 'question', 'questiontext'])
+    const qGu = getVal(['question_gu'])
     
     if (!qEn && !qGu) {
       errors.push('Question required in English or Gujarati')
     }
     
-    const correct = row.correct ? row.correct.toString().trim().toUpperCase() : ''
+    const correct = getVal(['correct', 'correct_option', 'correctoption']).toUpperCase()
     if (!['A', 'B', 'C', 'D'].includes(correct)) {
       errors.push('Correct option must be A/B/C/D')
     }
 
-    if (row.marks === undefined || row.marks === null || isNaN(Number(row.marks))) {
+    const marksVal = getVal(['marks'])
+    if (!marksVal || isNaN(Number(marksVal))) {
       errors.push('Marks must be numeric')
     }
 
-    const courseName = row.course ? row.course.toString().trim().toLowerCase() : ''
+    const courseName = courseVal.toLowerCase()
     if (courseName && !coursesMap[courseName]) {
-      errors.push(`Course "${row.course}" not found`)
+      errors.push(`Course "${courseVal}" not found`)
     }
-
-    const clean = (v: any) => v ? v.toString().trim() : ''
 
     return {
       isValid: errors.length === 0,
@@ -225,28 +237,29 @@ export default function NewQuestion() {
         course_id: coursesMap[courseName] || '',
         // Backwards compatibility
         question_text: qEn || qGu,
-        option_a: clean(row.optionA_en) || clean(row.optionA_gu),
-        option_b: clean(row.optionB_en) || clean(row.optionB_gu),
-        option_c: clean(row.optionC_en) || clean(row.optionC_gu),
-        option_d: clean(row.optionD_en) || clean(row.optionD_gu),
+        option_a: getVal(['optionA_en', 'optionA', 'option_a_en', 'option_a']) || getVal(['optionA_gu', 'option_a_gu']),
+        option_b: getVal(['optionB_en', 'optionB', 'option_b_en', 'option_b']) || getVal(['optionB_gu', 'option_b_gu']),
+        option_c: getVal(['optionC_en', 'optionC', 'option_c_en', 'option_c']) || getVal(['optionC_gu', 'option_c_gu']),
+        option_d: getVal(['optionD_en', 'optionD', 'option_d_en', 'option_d']) || getVal(['optionD_gu', 'option_d_gu']),
         
         // Bilingual fields
         question_en: qEn,
         question_gu: qGu,
-        optionA_en: clean(row.optionA_en),
-        optionA_gu: clean(row.optionA_gu),
-        optionB_en: clean(row.optionB_en),
-        optionB_gu: clean(row.optionB_gu),
-        optionC_en: clean(row.optionC_en),
-        optionC_gu: clean(row.optionC_gu),
-        optionD_en: clean(row.optionD_en),
-        optionD_gu: clean(row.optionD_gu),
+        optionA_en: getVal(['optionA_en', 'option_a_en', 'optionA', 'option_a']),
+        optionA_gu: getVal(['optionA_gu', 'option_a_gu']),
+        optionB_en: getVal(['optionB_en', 'option_b_en', 'optionB', 'option_b']),
+        optionB_gu: getVal(['optionB_gu', 'option_b_gu']),
+        optionC_en: getVal(['optionC_en', 'option_c_en', 'optionC', 'option_c']),
+        optionC_gu: getVal(['optionC_gu', 'option_c_gu']),
+        optionD_en: getVal(['optionD_en', 'option_d_en', 'optionD', 'option_d']),
+        optionD_gu: getVal(['optionD_gu', 'option_d_gu']),
 
         correct_option: correct,
-        marks: Number(row.marks) || 1
+        marks: Number(marksVal) || 1
       }
     }
   }
+
 
   const handleExcelUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]

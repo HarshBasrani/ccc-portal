@@ -98,7 +98,8 @@ export default function StudentProfile() {
 
   const formatDate = (dateString: string) => {
     if (!dateString) return 'N/A';
-    return new Date(dateString).toLocaleDateString('en-IN', {
+    const finalDate = dateString.includes('T') ? dateString : `${dateString}T00:00:00`;
+    return new Date(finalDate).toLocaleDateString('en-IN', {
       day: '2-digit',
       month: 'long',
       year: 'numeric'

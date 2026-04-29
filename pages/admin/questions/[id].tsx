@@ -20,9 +20,20 @@ export default function EditQuestion() {
     option_b: '',
     option_c: '',
     option_d: '',
+    question_en: '',
+    question_gu: '',
+    optionA_en: '',
+    optionA_gu: '',
+    optionB_en: '',
+    optionB_gu: '',
+    optionC_en: '',
+    optionC_gu: '',
+    optionD_en: '',
+    optionD_gu: '',
     correct_option: 'A',
     marks: 1
   })
+
   const [success, setSuccess] = useState<string | null>(null)
 
   useEffect(() => {
@@ -72,9 +83,20 @@ export default function EditQuestion() {
       option_b: data.option_b || '',
       option_c: data.option_c || '',
       option_d: data.option_d || '',
+      question_en: data.question_en || data.question_text || '',
+      question_gu: data.question_gu || '',
+      optionA_en: data.optionA_en || data.option_a || '',
+      optionA_gu: data.optionA_gu || '',
+      optionB_en: data.optionB_en || data.option_b || '',
+      optionB_gu: data.optionB_gu || '',
+      optionC_en: data.optionC_en || data.option_c || '',
+      optionC_gu: data.optionC_gu || '',
+      optionD_en: data.optionD_en || data.option_d || '',
+      optionD_gu: data.optionD_gu || '',
       correct_option: data.correct_option || 'A',
       marks: data.marks || 1
     })
+
   }
 
   const handleChange = (
@@ -94,15 +116,28 @@ export default function EditQuestion() {
       const { error: updateError } = await db
         .from('questions')
         .update({
-          question_text: formData.question_text.trim(),
-          option_a: formData.option_a.trim(),
-          option_b: formData.option_b.trim(),
-          option_c: formData.option_c.trim(),
-          option_d: formData.option_d.trim(),
+          question_text: formData.question_en.trim() || formData.question_text.trim() || formData.question_gu.trim(),
+          option_a: formData.optionA_en.trim() || formData.option_a.trim() || formData.optionA_gu.trim(),
+          option_b: formData.optionB_en.trim() || formData.option_b.trim() || formData.optionB_gu.trim(),
+          option_c: formData.optionC_en.trim() || formData.option_c.trim() || formData.optionC_gu.trim(),
+          option_d: formData.optionD_en.trim() || formData.option_d.trim() || formData.optionD_gu.trim(),
+          
+          question_en: formData.question_en.trim(),
+          question_gu: formData.question_gu.trim(),
+          optionA_en: formData.optionA_en.trim(),
+          optionA_gu: formData.optionA_gu.trim(),
+          optionB_en: formData.optionB_en.trim(),
+          optionB_gu: formData.optionB_gu.trim(),
+          optionC_en: formData.optionC_en.trim(),
+          optionC_gu: formData.optionC_gu.trim(),
+          optionD_en: formData.optionD_en.trim(),
+          optionD_gu: formData.optionD_gu.trim(),
+
           correct_option: formData.correct_option,
           marks: formData.marks
         })
         .eq('id', id)
+
 
       if (updateError) {
         throw new Error(updateError.message)
@@ -166,82 +201,156 @@ export default function EditQuestion() {
         <div className="card">
           <div className="card-body">
             <form onSubmit={handleSubmit}>
-              <div className="mb-3">
-                <label htmlFor="question_text" className="form-label">
-                  Question Text <span className="text-danger">*</span>
-                </label>
-                <textarea
-                  className="form-control"
-                  id="question_text"
-                  name="question_text"
-                  rows={3}
-                  value={formData.question_text}
-                  onChange={handleChange}
-                  required
-                />
-              </div>
-
-              <div className="row">
-                <div className="col-md-6 mb-3">
-                  <label htmlFor="option_a" className="form-label">
-                    Option A <span className="text-danger">*</span>
+              {/* Question Texts Side-by-Side */}
+              <div className="row mb-3">
+                <div className="col-md-6">
+                  <label htmlFor="question_en" className="form-label">
+                    Question (English)
                   </label>
-                  <input
-                    type="text"
+                  <textarea
                     className="form-control"
-                    id="option_a"
-                    name="option_a"
-                    value={formData.option_a}
+                    id="question_en"
+                    name="question_en"
+                    rows={3}
+                    value={formData.question_en}
                     onChange={handleChange}
-                    required
                   />
                 </div>
-                <div className="col-md-6 mb-3">
-                  <label htmlFor="option_b" className="form-label">
-                    Option B <span className="text-danger">*</span>
+                <div className="col-md-6">
+                  <label htmlFor="question_gu" className="form-label">
+                    Question (Gujarati)
                   </label>
-                  <input
-                    type="text"
+                  <textarea
                     className="form-control"
-                    id="option_b"
-                    name="option_b"
-                    value={formData.option_b}
+                    id="question_gu"
+                    name="question_gu"
+                    rows={3}
+                    value={formData.question_gu}
                     onChange={handleChange}
-                    required
                   />
                 </div>
               </div>
 
-              <div className="row">
-                <div className="col-md-6 mb-3">
-                  <label htmlFor="option_c" className="form-label">
-                    Option C <span className="text-danger">*</span>
+              {/* Option A */}
+              <div className="row mb-3">
+                <div className="col-md-6">
+                  <label htmlFor="optionA_en" className="form-label">
+                    Option A (English)
                   </label>
                   <input
                     type="text"
                     className="form-control"
-                    id="option_c"
-                    name="option_c"
-                    value={formData.option_c}
+                    id="optionA_en"
+                    name="optionA_en"
+                    value={formData.optionA_en}
                     onChange={handleChange}
-                    required
                   />
                 </div>
-                <div className="col-md-6 mb-3">
-                  <label htmlFor="option_d" className="form-label">
-                    Option D <span className="text-danger">*</span>
+                <div className="col-md-6">
+                  <label htmlFor="optionA_gu" className="form-label">
+                    Option A (Gujarati)
                   </label>
                   <input
                     type="text"
                     className="form-control"
-                    id="option_d"
-                    name="option_d"
-                    value={formData.option_d}
+                    id="optionA_gu"
+                    name="optionA_gu"
+                    value={formData.optionA_gu}
                     onChange={handleChange}
-                    required
                   />
                 </div>
               </div>
+
+              {/* Option B */}
+              <div className="row mb-3">
+                <div className="col-md-6">
+                  <label htmlFor="optionB_en" className="form-label">
+                    Option B (English)
+                  </label>
+                  <input
+                    type="text"
+                    className="form-control"
+                    id="optionB_en"
+                    name="optionB_en"
+                    value={formData.optionB_en}
+                    onChange={handleChange}
+                  />
+                </div>
+                <div className="col-md-6">
+                  <label htmlFor="optionB_gu" className="form-label">
+                    Option B (Gujarati)
+                  </label>
+                  <input
+                    type="text"
+                    className="form-control"
+                    id="optionB_gu"
+                    name="optionB_gu"
+                    value={formData.optionB_gu}
+                    onChange={handleChange}
+                  />
+                </div>
+              </div>
+
+              {/* Option C */}
+              <div className="row mb-3">
+                <div className="col-md-6">
+                  <label htmlFor="optionC_en" className="form-label">
+                    Option C (English)
+                  </label>
+                  <input
+                    type="text"
+                    className="form-control"
+                    id="optionC_en"
+                    name="optionC_en"
+                    value={formData.optionC_en}
+                    onChange={handleChange}
+                  />
+                </div>
+                <div className="col-md-6">
+                  <label htmlFor="optionC_gu" className="form-label">
+                    Option C (Gujarati)
+                  </label>
+                  <input
+                    type="text"
+                    className="form-control"
+                    id="optionC_gu"
+                    name="optionC_gu"
+                    value={formData.optionC_gu}
+                    onChange={handleChange}
+                  />
+                </div>
+              </div>
+
+              {/* Option D */}
+              <div className="row mb-3">
+                <div className="col-md-6">
+                  <label htmlFor="optionD_en" className="form-label">
+                    Option D (English)
+                  </label>
+                  <input
+                    type="text"
+                    className="form-control"
+                    id="optionD_en"
+                    name="optionD_en"
+                    value={formData.optionD_en}
+                    onChange={handleChange}
+                  />
+                </div>
+                <div className="col-md-6">
+                  <label htmlFor="optionD_gu" className="form-label">
+                    Option D (Gujarati)
+                  </label>
+                  <input
+                    type="text"
+                    className="form-control"
+                    id="optionD_gu"
+                    name="optionD_gu"
+                    value={formData.optionD_gu}
+                    onChange={handleChange}
+                  />
+                </div>
+              </div>
+
 
               <div className="row">
                 <div className="col-md-6 mb-3">
