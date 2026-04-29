@@ -65,11 +65,23 @@ export default defineSchema({
 
   questions: defineTable({
     courseId: v.id("courses"),
-    questionText: v.string(),
-    optionA: v.string(),
-    optionB: v.string(),
-    optionC: v.string(),
-    optionD: v.string(),
+    questionText: v.string(), // Keep for backward compatibility
+    optionA: v.string(),      // Keep for backward compatibility
+    optionB: v.string(),      // Keep for backward compatibility
+    optionC: v.string(),      // Keep for backward compatibility
+    optionD: v.string(),      // Keep for backward compatibility
+    
+    question_en: v.optional(v.string()),
+    question_gu: v.optional(v.string()),
+    optionA_en: v.optional(v.string()),
+    optionA_gu: v.optional(v.string()),
+    optionB_en: v.optional(v.string()),
+    optionB_gu: v.optional(v.string()),
+    optionC_en: v.optional(v.string()),
+    optionC_gu: v.optional(v.string()),
+    optionD_en: v.optional(v.string()),
+    optionD_gu: v.optional(v.string()),
+
     correctOption: v.string(),
     marks: v.number(),
     createdAt: v.number(),

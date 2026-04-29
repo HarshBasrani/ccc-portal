@@ -19,14 +19,18 @@ export default function NewQuestion() {
   const [success, setSuccess] = useState<string | null>(null)
   const [courses, setCourses] = useState<Course[]>([])
 
-  // Form Data for manual entry
   const [formData, setFormData] = useState({
     course_id: '',
-    question_text: '',
-    option_a: '',
-    option_b: '',
-    option_c: '',
-    option_d: '',
+    question_en: '',
+    question_gu: '',
+    optionA_en: '',
+    optionA_gu: '',
+    optionB_en: '',
+    optionB_gu: '',
+    optionC_en: '',
+    optionC_gu: '',
+    optionD_en: '',
+    optionD_gu: '',
     correct_option: 'A',
     marks: 1
   })
@@ -99,8 +103,8 @@ export default function NewQuestion() {
       return
     }
 
-    if (!formData.question_text.trim() || !formData.option_a.trim() || !formData.option_b.trim() || !formData.option_c.trim() || !formData.option_d.trim()) {
-      setError('Please fill in all required fields.')
+    if (!formData.question_en.trim() && !formData.question_gu.trim()) {
+      setError('Please enter either an English or Gujarati question.')
       setSubmitting(false)
       return
     }
@@ -110,23 +114,51 @@ export default function NewQuestion() {
         .from('questions')
         .insert({
           course_id: formData.course_id,
-          question_text: formData.question_text.trim(),
-          option_a: formData.option_a.trim(),
-          option_b: formData.option_b.trim(),
-          option_c: formData.option_c.trim(),
-          option_d: formData.option_d.trim(),
+          // Backwards compatibility
+          question_text: formData.question_en.trim() || formData.question_gu.trim(),
+          option_a: formData.optionA_en.trim() || formData.optionA_gu.trim(),
+          option_b: formData.optionB_en.trim() || formData.optionB_gu.trim(),
+          option_c: formData.optionC_en.trim() || formData.optionC_gu.trim(),
+          option_d: formData.optionD_en.trim() || formData.optionD_gu.trim(),
+
+          // Bilingual fields
+          question_en: formData.question_en.trim(),
+          question_gu: formData.question_gu.trim(),
+          optionA_en: formData.optionA_en.trim(),
+          optionA_gu: formData.optionA_gu.trim(),
+          optionB_en: formData.optionB_en.trim(),
+          optionB_gu: formData.optionB_gu.trim(),
+          optionC_en: formData.optionC_en.trim(),
+          optionC_gu: formData.optionC_gu.trim(),
+          optionD_en: formData.optionD_en.trim(),
+          optionD_gu: formData.optionD_gu.trim(),
+
           correct_option: formData.correct_option,
           marks: formData.marks
         })
 
       if (insertError) {
-        throw new Error(insertError.message)
+        setError('Insert error: ' + insertError.message)
+        setSubmitting(false)
+        return
       }
 
       setSuccess('Question created successfully!')
-      setTimeout(() => {
-        router.push('/admin/questions')
-      }, 1500)
+      setFormData({
+        course_id: formData.course_id,
+        question_en: '',
+        question_gu: '',
+        optionA_en: '',
+        optionA_gu: '',
+        optionB_en: '',
+        optionB_gu: '',
+        optionC_en: '',
+        optionC_gu: '',
+        optionD_en: '',
+        optionD_gu: '',
+        correct_option: 'A',
+        marks: 1
+      })
     } catch (err: any) {
       setError(err.message || 'Something went wrong')
     } finally {
@@ -139,11 +171,16 @@ export default function NewQuestion() {
     const templateData = [
       {
         course: 'CCC',
-        question: 'What does CPU stand for?',
-        optionA: 'Central Processing Unit',
-        optionB: 'Central Program Unit',
-        optionC: 'Computer Processing Unit',
-        optionD: 'Control Processing Unit',
+        question_en: 'What does CPU stand for?',
+        question_gu: 'CPU નું પૂરું નામ શું છે?',
+        optionA_en: 'Central Processing Unit',
+        optionA_gu: 'સેન્ટ્રલ પ્રોસેસિંગ યુનિટ',
+        optionB_en: 'Central Program Unit',
+        optionB_gu: 'સેન્ટ્રલ પ્રોગ્રામ યુનિટ',
+        optionC_en: 'Computer Processing Unit',
+        optionC_gu: 'કમ્પ્યુટર પ્રોસેસિંગ યુનિટ',
+        optionD_en: 'Control Processing Unit',
+        optionD_gu: 'કંટ્રોલ પ્રોસેસિંગ યુનિટ',
         correct: 'A',
         marks: 1
       }
@@ -151,17 +188,19 @@ export default function NewQuestion() {
     const worksheet = XLSX.utils.json_to_sheet(templateData)
     const workbook = XLSX.utils.book_new()
     XLSX.utils.book_append_sheet(workbook, worksheet, 'Questions')
-    XLSX.writeFile(workbook, 'question_template.xlsx')
+    XLSX.writeFile(workbook, 'bilingual_question_template.xlsx')
   }
 
   const validateExcelRow = (row: any, coursesMap: Record<string, string>) => {
     const errors: string[] = []
     if (!row.course || !row.course.toString().trim()) errors.push('Course required')
-    if (!row.question || !row.question.toString().trim()) errors.push('Question required')
-    if (!row.optionA || !row.optionA.toString().trim()) errors.push('Option A required')
-    if (!row.optionB || !row.optionB.toString().trim()) errors.push('Option B required')
-    if (!row.optionC || !row.optionC.toString().trim()) errors.push('Option C required')
-    if (!row.optionD || !row.optionD.toString().trim()) errors.push('Option D required')
+    
+    const qEn = row.question_en ? row.question_en.toString().trim() : ''
+    const qGu = row.question_gu ? row.question_gu.toString().trim() : ''
+    
+    if (!qEn && !qGu) {
+      errors.push('Question required in English or Gujarati')
+    }
     
     const correct = row.correct ? row.correct.toString().trim().toUpperCase() : ''
     if (!['A', 'B', 'C', 'D'].includes(correct)) {
@@ -177,16 +216,32 @@ export default function NewQuestion() {
       errors.push(`Course "${row.course}" not found`)
     }
 
+    const clean = (v: any) => v ? v.toString().trim() : ''
+
     return {
       isValid: errors.length === 0,
       errors,
       cleanData: {
         course_id: coursesMap[courseName] || '',
-        question_text: row.question ? row.question.toString().trim() : '',
-        option_a: row.optionA ? row.optionA.toString().trim() : '',
-        option_b: row.optionB ? row.optionB.toString().trim() : '',
-        option_c: row.optionC ? row.optionC.toString().trim() : '',
-        option_d: row.optionD ? row.optionD.toString().trim() : '',
+        // Backwards compatibility
+        question_text: qEn || qGu,
+        option_a: clean(row.optionA_en) || clean(row.optionA_gu),
+        option_b: clean(row.optionB_en) || clean(row.optionB_gu),
+        option_c: clean(row.optionC_en) || clean(row.optionC_gu),
+        option_d: clean(row.optionD_en) || clean(row.optionD_gu),
+        
+        // Bilingual fields
+        question_en: qEn,
+        question_gu: qGu,
+        optionA_en: clean(row.optionA_en),
+        optionA_gu: clean(row.optionA_gu),
+        optionB_en: clean(row.optionB_en),
+        optionB_gu: clean(row.optionB_gu),
+        optionC_en: clean(row.optionC_en),
+        optionC_gu: clean(row.optionC_gu),
+        optionD_en: clean(row.optionD_en),
+        optionD_gu: clean(row.optionD_gu),
+
         correct_option: correct,
         marks: Number(row.marks) || 1
       }
@@ -206,117 +261,94 @@ export default function NewQuestion() {
         const worksheet = workbook.Sheets[firstSheetName]
         const jsonData: any[] = XLSX.utils.sheet_to_json(worksheet)
 
-        if (jsonData.length === 0) {
-          setError('The uploaded Excel file is empty.')
-          return
-        }
-
         const coursesMap: Record<string, string> = {}
         courses.forEach(c => {
-          coursesMap[c.name.toLowerCase().trim()] = c.id
+          coursesMap[c.name.toLowerCase()] = c.id
         })
 
-        const validatedData = jsonData.map((row, index) => {
+        const validatedRows = jsonData.map((row, idx) => {
           const validation = validateExcelRow(row, coursesMap)
           return {
-            rowNumber: index + 2, // Excel row number (1-indexed + header)
+            rowNumber: idx + 2,
+            isValid: validation.isValid,
+            errors: validation.errors,
             rawData: row,
-            ...validation
+            cleanData: validation.cleanData
           }
         })
 
-        setPreviewQuestions(validatedData)
+        setPreviewQuestions(validatedRows)
         setShowPreview(true)
-        setUploadSummary(null)
-        setError(null)
       } catch (err: any) {
-        setError(`Failed to parse Excel file: ${err.message}`)
+        setError('Failed to parse Excel file: ' + err.message)
       }
     }
     reader.readAsArrayBuffer(file)
-    e.target.value = '' // Reset file input
+    e.target.value = ''
   }
 
   const handleConfirmBulkUpload = async () => {
     setBulkSubmitting(true)
-    setError(null)
-    setSuccess(null)
-
     let successCount = 0
     let failedCount = 0
-    const failedDetails: string[] = []
+    const details: string[] = []
 
-    const validRows = previewQuestions.filter(q => q.isValid)
+    const validQuestions = previewQuestions.filter(q => q.isValid)
 
-    for (const row of validRows) {
+    for (const item of validQuestions) {
       try {
         const { error: insertError } = await legacyClient
           .from('questions')
-          .insert(row.cleanData)
+          .insert(item.cleanData)
 
         if (insertError) {
-          throw new Error(insertError.message)
+          failedCount++
+          details.push(`Row ${item.rowNumber}: ${insertError.message}`)
+        } else {
+          successCount++
         }
-        successCount++
       } catch (err: any) {
         failedCount++
-        failedDetails.push(`Row ${row.rowNumber}: ${err.message}`)
+        details.push(`Row ${item.rowNumber}: ${err.message || 'Unknown error'}`)
       }
     }
 
-    previewQuestions.forEach(row => {
-      if (!row.isValid) {
-        failedCount++
-        failedDetails.push(`Row ${row.rowNumber}: ${row.errors.join(', ')}`)
-      }
+    const invalidRows = previewQuestions.filter(q => !q.isValid)
+    failedCount += invalidRows.length
+    invalidRows.forEach(row => {
+      details.push(`Row ${row.rowNumber}: ${row.errors.join(', ')}`)
     })
 
     setUploadSummary({
       total: previewQuestions.length,
       success: successCount,
       failed: failedCount,
-      details: failedDetails
+      details
     })
-
     setBulkSubmitting(false)
-
-    if (successCount > 0) {
-      setSuccess(`सफल: ${successCount} questions uploaded successfully!`)
-    }
+    setShowPreview(false)
+    setPreviewQuestions([])
   }
 
   if (loading) {
-    return (
-      <div className="container mt-4">
-        <p>Checking admin access</p>
-      </div>
-    )
+    return <div className="container py-5 text-center"><div className="spinner-border"></div></div>
   }
 
   return (
     <>
       <Head>
-        <title>Add New Question | CCC Exam Portal</title>
+        <title>Add Bilingual Question - CCC Exam Portal</title>
       </Head>
-      <div className="container mt-4">
-        <div className="d-flex justify-content-between align-items-center mb-3">
-          <h1 className="h4 mb-0">Add New Question</h1>
-          <div className="d-flex gap-2">
-            <button 
-              type="button" 
-              className="btn btn-outline-success btn-sm"
-              onClick={downloadTemplate}
-            >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="me-1">
-                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-                <polyline points="7 10 12 15 17 10"/>
-                <line x1="12" y1="15" x2="12" y2="3"/>
-              </svg>
-              Download Sample Excel
+      <div className="container py-5">
+        <div className="d-flex justify-content-between align-items-center mb-4">
+          <div>
+            <h2>Add Bilingual Question</h2>
+            <p className="text-muted">Create a single question or use bulk upload</p>
+          </div>
+          <div>
+            <button className="btn btn-outline-primary btn-sm" onClick={downloadTemplate}>
+              Download Sample Template
             </button>
-            <Link href="/admin/questions" className="btn btn-outline-secondary btn-sm">
-              Back to Questions
-            </Link>
           </div>
         </div>
 
@@ -370,87 +402,154 @@ export default function NewQuestion() {
                     </option>
                   ))}
                 </select>
-                {courses.length === 0 && (
-                  <div className="form-text text-danger">
-                    No courses available.{' '}
-                    <Link href="/admin/courses">Create one here</Link>.
-                  </div>
-                )}
               </div>
 
-              <div className="mb-3">
-                <label htmlFor="question_text" className="form-label">
-                  Question Text <span className="text-danger">*</span>
-                </label>
-                <textarea
-                  className="form-control"
-                  id="question_text"
-                  name="question_text"
-                  rows={3}
-                  value={formData.question_text}
-                  onChange={handleChange}
-                  required
-                />
-              </div>
-
-              <div className="row">
-                <div className="col-md-6 mb-3">
-                  <label htmlFor="option_a" className="form-label">
-                    Option A <span className="text-danger">*</span>
+              {/* Question Texts Side-by-Side */}
+              <div className="row mb-3">
+                <div className="col-md-6">
+                  <label htmlFor="question_en" className="form-label">
+                    Question (English)
                   </label>
-                  <input
-                    type="text"
+                  <textarea
                     className="form-control"
-                    id="option_a"
-                    name="option_a"
-                    value={formData.option_a}
+                    id="question_en"
+                    name="question_en"
+                    rows={3}
+                    value={formData.question_en}
                     onChange={handleChange}
-                    required
                   />
                 </div>
-                <div className="col-md-6 mb-3">
-                  <label htmlFor="option_b" className="form-label">
-                    Option B <span className="text-danger">*</span>
+                <div className="col-md-6">
+                  <label htmlFor="question_gu" className="form-label">
+                    Question (Gujarati)
                   </label>
-                  <input
-                    type="text"
+                  <textarea
                     className="form-control"
-                    id="option_b"
-                    name="option_b"
-                    value={formData.option_b}
+                    id="question_gu"
+                    name="question_gu"
+                    rows={3}
+                    value={formData.question_gu}
                     onChange={handleChange}
-                    required
                   />
                 </div>
               </div>
 
-              <div className="row">
-                <div className="col-md-6 mb-3">
-                  <label htmlFor="option_c" className="form-label">
-                    Option C <span className="text-danger">*</span>
+              {/* Option A */}
+              <div className="row mb-3">
+                <div className="col-md-6">
+                  <label htmlFor="optionA_en" className="form-label">
+                    Option A (English)
                   </label>
                   <input
                     type="text"
                     className="form-control"
-                    id="option_c"
-                    name="option_c"
-                    value={formData.option_c}
+                    id="optionA_en"
+                    name="optionA_en"
+                    value={formData.optionA_en}
                     onChange={handleChange}
-                    required
                   />
                 </div>
-                <div className="col-md-6 mb-3">
-                  <label htmlFor="option_d" className="form-label">
-                    Option D <span className="text-danger">*</span>
+                <div className="col-md-6">
+                  <label htmlFor="optionA_gu" className="form-label">
+                    Option A (Gujarati)
                   </label>
                   <input
                     type="text"
                     className="form-control"
-                    id="option_d"
-                    name="option_d"
-                    value={formData.option_d}
+                    id="optionA_gu"
+                    name="optionA_gu"
+                    value={formData.optionA_gu}
                     onChange={handleChange}
-                    required
+                  />
+                </div>
+              </div>
+
+              {/* Option B */}
+              <div className="row mb-3">
+                <div className="col-md-6">
+                  <label htmlFor="optionB_en" className="form-label">
+                    Option B (English)
+                  </label>
+                  <input
+                    type="text"
+                    className="form-control"
+                    id="optionB_en"
+                    name="optionB_en"
+                    value={formData.optionB_en}
+                    onChange={handleChange}
+                  />
+                </div>
+                <div className="col-md-6">
+                  <label htmlFor="optionB_gu" className="form-label">
+                    Option B (Gujarati)
+                  </label>
+                  <input
+                    type="text"
+                    className="form-control"
+                    id="optionB_gu"
+                    name="optionB_gu"
+                    value={formData.optionB_gu}
+                    onChange={handleChange}
+                  />
+                </div>
+              </div>
+
+              {/* Option C */}
+              <div className="row mb-3">
+                <div className="col-md-6">
+                  <label htmlFor="optionC_en" className="form-label">
+                    Option C (English)
+                  </label>
+                  <input
+                    type="text"
+                    className="form-control"
+                    id="optionC_en"
+                    name="optionC_en"
+                    value={formData.optionC_en}
+                    onChange={handleChange}
+                  />
+                </div>
+                <div className="col-md-6">
+                  <label htmlFor="optionC_gu" className="form-label">
+                    Option C (Gujarati)
+                  </label>
+                  <input
+                    type="text"
+                    className="form-control"
+                    id="optionC_gu"
+                    name="optionC_gu"
+                    value={formData.optionC_gu}
+                    onChange={handleChange}
+                  />
+                </div>
+              </div>
+
+              {/* Option D */}
+              <div className="row mb-3">
+                <div className="col-md-6">
+                  <label htmlFor="optionD_en" className="form-label">
+                    Option D (English)
+                  </label>
+                  <input
+                    type="text"
+                    className="form-control"
+                    id="optionD_en"
+                    name="optionD_en"
+                    value={formData.optionD_en}
+                    onChange={handleChange}
+                  />
+                </div>
+                <div className="col-md-6">
+                  <label htmlFor="optionD_gu" className="form-label">
+                    Option D (Gujarati)
+                  </label>
+                  <input
+                    type="text"
+                    className="form-control"
+                    id="optionD_gu"
+                    name="optionD_gu"
+                    value={formData.optionD_gu}
+                    onChange={handleChange}
                   />
                 </div>
               </div>
@@ -541,7 +640,7 @@ export default function NewQuestion() {
             </div>
             <div className="card-body">
               <p><strong>Total Rows:</strong> {uploadSummary.total}</p>
-              <p className="text-success"><strong>सफल (Success):</strong> {uploadSummary.success}</p>
+              <p className="text-success"><strong>સફળ (Success):</strong> {uploadSummary.success}</p>
               <p className="text-danger"><strong>Failed:</strong> {uploadSummary.failed}</p>
               
               {uploadSummary.details.length > 0 && (
@@ -590,11 +689,8 @@ export default function NewQuestion() {
                     <tr>
                       <th>Row</th>
                       <th>Course</th>
-                      <th>Question</th>
-                      <th>Option A</th>
-                      <th>Option B</th>
-                      <th>Option C</th>
-                      <th>Option D</th>
+                      <th>Question (EN)</th>
+                      <th>Question (GU)</th>
                       <th>Correct</th>
                       <th>Marks</th>
                       <th>Status</th>
@@ -605,11 +701,8 @@ export default function NewQuestion() {
                       <tr key={index} className={row.isValid ? '' : 'table-danger'}>
                         <td>{row.rowNumber}</td>
                         <td>{row.rawData.course || <span className="text-muted">Empty</span>}</td>
-                        <td>{row.rawData.question || <span className="text-muted">Empty</span>}</td>
-                        <td>{row.rawData.optionA || <span className="text-muted">Empty</span>}</td>
-                        <td>{row.rawData.optionB || <span className="text-muted">Empty</span>}</td>
-                        <td>{row.rawData.optionC || <span className="text-muted">Empty</span>}</td>
-                        <td>{row.rawData.optionD || <span className="text-muted">Empty</span>}</td>
+                        <td>{row.rawData.question_en || <span className="text-muted">Empty</span>}</td>
+                        <td>{row.rawData.question_gu || <span className="text-muted">Empty</span>}</td>
                         <td>{row.rawData.correct || <span className="text-muted">Empty</span>}</td>
                         <td>{row.rawData.marks !== undefined ? row.rawData.marks : <span className="text-muted">Empty</span>}</td>
                         <td>
@@ -629,7 +722,6 @@ export default function NewQuestion() {
             </div>
           </div>
         )}
-
       </div>
     </>
   )

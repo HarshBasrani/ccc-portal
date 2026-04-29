@@ -31,6 +31,18 @@ interface Question {
   option_b: string
   option_c: string
   option_d: string
+  
+  question_en?: string
+  question_gu?: string
+  optionA_en?: string
+  optionA_gu?: string
+  optionB_en?: string
+  optionB_gu?: string
+  optionC_en?: string
+  optionC_gu?: string
+  optionD_en?: string
+  optionD_gu?: string
+
   correct_option: string
   marks: number
 }
@@ -70,6 +82,7 @@ export default function ExamEngine() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
+  const [language, setLanguage] = useState<'EN' | 'GU'>('EN')
 
   const [attempt, setAttempt] = useState<Attempt | null>(null)
   const [questions, setQuestions] = useState<Question[]>([])
@@ -1107,18 +1120,52 @@ export default function ExamEngine() {
             <div className="card">
               <div className="card-header bg-light d-flex justify-content-between align-items-center">
                 <span className="fw-bold">Question {currentIndex + 1}</span>
-                <span className="badge bg-secondary">{currentQuestion.marks || 1} mark(s)</span>
+                <div className="d-flex align-items-center gap-3">
+                  <div className="btn-group btn-group-sm" role="group" aria-label="Language Toggle">
+                    <button
+                      type="button"
+                      className={`btn ${language === 'EN' ? 'btn-dark' : 'btn-outline-dark'}`}
+                      onClick={() => setLanguage('EN')}
+                    >
+                      EN
+                    </button>
+                    <button
+                      type="button"
+                      className={`btn ${language === 'GU' ? 'btn-dark' : 'btn-outline-dark'}`}
+                      onClick={() => setLanguage('GU')}
+                    >
+                      ગુજરાતી
+                    </button>
+                  </div>
+                  <span className="badge bg-secondary">{currentQuestion.marks || 1} mark(s)</span>
+                </div>
               </div>
               <div className="card-body">
                 {/* Large question text */}
-                <p className="fs-5 mb-4">{currentQuestion.question_text}</p>
+                <p className="fs-5 mb-4">
+                  {language === 'GU' && currentQuestion.question_gu 
+                    ? currentQuestion.question_gu 
+                    : currentQuestion.question_en || currentQuestion.question_text}
+                </p>
 
                 {/* Radio buttons for A/B/C/D */}
                 <div className="d-flex flex-column gap-2">
                   {(['A', 'B', 'C', 'D'] as const).map((opt) => {
-                    const optionKey = `option_${opt.toLowerCase()}` as keyof Question
-                    const optionText = currentQuestion[optionKey] as string
                     const isSelected = selectedOption === opt
+                    
+                    let optionText = ''
+                    if (language === 'GU') {
+                      const guKey = `option${opt}_gu` as keyof Question
+                      optionText = (currentQuestion[guKey] || '') as string
+                    }
+                    if (!optionText) {
+                      const enKey = `option${opt}_en` as keyof Question
+                      optionText = (currentQuestion[enKey] || '') as string
+                    }
+                    if (!optionText) {
+                      const fallbackKey = `option_${opt.toLowerCase()}` as keyof Question
+                      optionText = (currentQuestion[fallbackKey] || '') as string
+                    }
 
                     return (
                       <div
