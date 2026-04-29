@@ -96,9 +96,17 @@ export default function StudentProfile() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const formatDate = (dateString: string) => {
+  const formatDate = (dateString: any) => {
     if (!dateString) return 'N/A';
-    const finalDate = dateString.includes('T') ? dateString : `${dateString}T00:00:00`;
+    if (typeof dateString === 'number') {
+      return new Date(dateString).toLocaleDateString('en-IN', {
+        day: '2-digit',
+        month: 'long',
+        year: 'numeric'
+      });
+    }
+    const str = String(dateString);
+    const finalDate = str.includes('T') ? str : `${str}T00:00:00`;
     return new Date(finalDate).toLocaleDateString('en-IN', {
       day: '2-digit',
       month: 'long',

@@ -1,6 +1,9 @@
-﻿// pages/api/exam/emergency-save.ts
+// pages/api/exam/emergency-save.ts
 import { NextApiRequest, NextApiResponse } from 'next'
 import { legacyAdmin } from '../../../lib/legacyAdmin'
+
+import { ConvexHttpClient } from 'convex/browser'
+import { api } from '../../../convex/_generated/api'
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') {
@@ -8,7 +11,17 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   try {
-    const { attemptId, data } = req.body
+    const { attemptId, data, sessionToken } = JSON.parse(typeof req.body === 'string' ? req.body : JSON.stringify(req.body))
+
+    if (!sessionToken) {
+      return res.status(401).json({ error: 'Unauthorized: Missing session token' })
+    }
+
+    const convexClient = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!)
+    const authResult = await convexClient.query(api.auth.verifySession, { token: sessionToken })
+    if (!authResult.valid) {
+      return res.status(401).json({ error: 'Unauthorized: Invalid session' })
+    }
 
     if (!attemptId || !data) {
       return res.status(400).json({ error: 'Missing required fields' })

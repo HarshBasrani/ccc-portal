@@ -526,11 +526,15 @@ export default function ExamEngine() {
         }
         
         try {
+          const rawSession = localStorage.getItem('ccc_portal_session')
+          const sessionToken = rawSession ? JSON.parse(rawSession).token : undefined
+          
           navigator.sendBeacon(
             '/api/exam/emergency-save',
             JSON.stringify({
               attemptId: attempt.id,
-              data: saveData
+              data: saveData,
+              sessionToken
             })
           )
         } catch (error) {

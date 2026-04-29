@@ -6,11 +6,20 @@ export default defineSchema({
     fullName: v.optional(v.string()),
     email: v.string(),
     role: v.union(v.literal("admin"), v.literal("student")),
+    passwordHash: v.optional(v.string()),
+    passwordSalt: v.optional(v.string()),
     createdAt: v.number(),
     updatedAt: v.number(),
   })
     .index("by_email", ["email"])
     .index("by_role", ["role"]),
+
+  sessions: defineTable({
+    userId: v.id("profiles"),
+    token: v.string(),
+    expiresAt: v.number(),
+  })
+    .index("by_token", ["token"]),
 
   students: defineTable({
     profileId: v.id("profiles"),

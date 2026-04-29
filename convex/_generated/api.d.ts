@@ -9,6 +9,7 @@
  */
 
 import type * as admin from "../admin.js";
+import type * as auth from "../auth.js";
 import type * as compat from "../compat.js";
 import type * as profiles from "../profiles.js";
 import type * as students from "../students.js";
@@ -21,6 +22,7 @@ import type {
 
 declare const fullApi: ApiFromModules<{
   admin: typeof admin;
+  auth: typeof auth;
   compat: typeof compat;
   profiles: typeof profiles;
   students: typeof students;

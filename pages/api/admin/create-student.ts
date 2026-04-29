@@ -3,12 +3,27 @@ import type { NextApiRequest, NextApiResponse } from 'next'
 import { legacyAdmin } from '../../../lib/legacyAdmin'
 import { legacyClient } from '../../../lib/legacyClient'
 
+import { ConvexHttpClient } from 'convex/browser'
+import { api } from '../../../convex/_generated/api'
+
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' })
   }
 
   try {
+    const { sessionToken } = req.body
+    
+    if (!sessionToken) {
+      return res.status(401).json({ error: 'Unauthorized: Missing token' })
+    }
+
+    const convexClient = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!)
+    const authResult = await convexClient.query(api.auth.verifySession, { token: sessionToken })
+    if (!authResult.valid || authResult.role !== 'admin') {
+      return res.status(403).json({ error: 'Forbidden: Admin access required' })
+    }
+
     const {
       email,
       password,

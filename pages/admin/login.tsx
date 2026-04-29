@@ -27,13 +27,13 @@ export default function AdminLoginPage() {
         return
       }
 
-      const result = await convex.mutation(api.admin.authenticateAdmin, {
+      const result = await convex.mutation(api.auth.login, {
         email: email.trim(),
         password,
       })
 
       if (!result.success) {
-        setError(result.error)
+        setError("Login failed")
         setLoading(false)
         return
       }
@@ -43,6 +43,7 @@ export default function AdminLoginPage() {
         email: result.email,
         fullName: result.fullName,
         role: result.role,
+        token: result.token,
       })
 
       router.push('/admin/dashboard')

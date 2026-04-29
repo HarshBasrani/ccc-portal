@@ -149,13 +149,14 @@ const getSession = () => {
       fullName: string
       role: Role
       enrollmentNo?: string
+      token?: string
     }
   } catch {
     return null
   }
 }
 
-const setSession = (session: { profileId: string; email: string; fullName: string; role: Role; enrollmentNo?: string }) => {
+const setSession = (session: { profileId: string; email: string; fullName: string; role: Role; enrollmentNo?: string; token?: string }) => {
   if (typeof window === 'undefined') return
   window.localStorage.setItem(SESSION_KEY, JSON.stringify(session))
 }
@@ -257,6 +258,9 @@ class LegacyQueryBuilder {
       return { data: this.singleMode === 'none' ? [] : null, error: null }
     }
 
+    const session = getSession()
+    const sessionToken = session?.token
+
     try {
       if (this.operation === 'select') {
         const result = await (client as any).query('compat:listRows', {
@@ -268,6 +272,7 @@ class LegacyQueryBuilder {
           rangeTo: this.rangeTo,
           limit: this.limitValue,
           singleMode: this.singleMode,
+          sessionToken,
         })
 
         const rows = fromCamelObject(result.rows || [])
@@ -286,6 +291,7 @@ class LegacyQueryBuilder {
         values: toCamelObject(this.values),
         filters: this.filters,
         onConflict: this.onConflictFields,
+        sessionToken,
       })
 
       const ids = mutationResult.ids ?? []
@@ -300,6 +306,7 @@ class LegacyQueryBuilder {
       const fetchResult = await (client as any).query('compat:listRows', {
         table,
         filters: [{ field: '_id', op: 'in', value: ids }],
+        sessionToken,
       })
       const rows = fromCamelObject(fetchResult.rows || [])
       const data = this.singleMode === 'none' ? rows : rows[0] ?? null
@@ -357,18 +364,19 @@ export const legacyClient: any = {
       }
     },
 
-    signInWithPassword: async ({ email, password }: { email: string; password: string }) => {
+    signInWithPassword: async ({ email, enrollmentNo, password }: { email?: string; enrollmentNo?: string; password: string }) => {
       try {
         const client = getConvexClient()
-        const result = await (client as any).mutation('compat:signInWithPassword', {
+        const result = await (client as any).mutation('auth:login', {
           email,
+          enrollmentNo,
           password,
         })
 
         if (!result.success) {
           return {
             data: { user: null, session: null },
-            error: { message: result.error },
+            error: { message: 'Login failed' },
           }
         }
 
@@ -378,6 +386,7 @@ export const legacyClient: any = {
           fullName: result.fullName,
           role: result.role,
           enrollmentNo: result.enrollmentNo,
+          token: result.token,
         })
 
         return {

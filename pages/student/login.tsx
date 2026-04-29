@@ -25,41 +25,13 @@ export default function StudentLoginPage() {
         return
       }
 
-      const { data: student, error: studentError } = await legacyClient
-        .from('students')
-        .select('email, profile_id')
-        .eq('enrollment_no', enrollmentNo.trim())
-        .maybeSingle()
-
-      if (studentError) {
-        setError('Error looking up student: ' + studentError.message)
-        setLoading(false)
-        return
-      }
-
-      if (!student) {
-        setError('Invalid Enrollment Number. Please check and try again.')
-        setLoading(false)
-        return
-      }
-
-      if (!student.email) {
-        setError('No email associated with this enrollment. Contact admin.')
-        setLoading(false)
-        return
-      }
-
       const { data, error: loginError } = await legacyClient.auth.signInWithPassword({
-        email: student.email,
+        enrollmentNo: enrollmentNo.trim(),
         password: password,
       })
 
       if (loginError) {
-        if (loginError.message.includes('Invalid login credentials')) {
-          setError('Incorrect password. Please try again.')
-        } else {
-          setError(loginError.message)
-        }
+        setError(loginError.message)
         setLoading(false)
         return
       }

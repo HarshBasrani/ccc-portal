@@ -1,5 +1,6 @@
 import { mutation, query } from "./_generated/server";
 import { v } from "convex/values";
+import { validateSession } from "./auth";
 
 const tableNameValidator = v.union(
   v.literal("profiles"),
@@ -162,13 +163,54 @@ export const listRows = query({
     rangeTo: v.optional(v.number()),
     limit: v.optional(v.number()),
     singleMode: v.optional(v.union(v.literal("none"), v.literal("single"), v.literal("maybeSingle"))),
+    sessionToken: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
+    const profile = await validateSession(ctx, args.sessionToken);
+    
     const tableName = args.table as any;
     let rows = (await ctx.db.query(tableName).take(10000)) as Array<Record<string, unknown>>;
 
     for (const filter of args.filters ?? []) {
       rows = rows.filter((row) => matchesFilter(row, filter));
+    }
+
+    let studentId: any = null;
+    if (profile.role === "student") {
+      const students = await ctx.db.query("students").collect();
+      const student = students.find((s) => s.profileId === profile._id);
+      if (student) studentId = student._id;
+    }
+
+    if (profile.role === "student") {
+      const allowedTables = ["profiles", "students", "courses", "exams", "questions", "examAssignments", "examAttempts", "examAnswers", "certificates"];
+      if (!allowedTables.includes(args.table)) {
+        throw new Error(`Unauthorized access to table ${args.table}`);
+      }
+
+      if (args.table === "questions") {
+        rows = rows.map(row => {
+          const { correctOption, ...rest } = row;
+          return rest;
+        });
+      }
+      if (args.table === "students") {
+        rows = rows.filter(row => row.profileId === profile._id);
+      }
+      if (args.table === "examAttempts") {
+        rows = rows.filter(row => row.studentId === studentId);
+      }
+      if (args.table === "examAssignments") {
+        rows = rows.filter(row => row.studentId === studentId);
+      }
+      if (args.table === "examAnswers") {
+        const attempts = await ctx.db.query("examAttempts").collect();
+        const myAttemptIds = attempts.filter(a => a.studentId === studentId).map(a => a._id.toString());
+        rows = rows.filter(row => myAttemptIds.includes(row.attemptId?.toString()));
+      }
+      if (args.table === "certificates") {
+        rows = rows.filter(row => row.studentId === studentId);
+      }
     }
 
     const total = rows.length;
@@ -292,10 +334,95 @@ export const mutateRows = mutation({
     values: v.optional(v.any()),
     filters: v.optional(v.array(filterValidator)),
     onConflict: v.optional(v.array(v.string())),
+    sessionToken: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
+    const profile = await validateSession(ctx, args.sessionToken);
     const tableName = args.table as any;
     const now = Date.now();
+
+    let studentId: any = null;
+    if (profile.role === "student") {
+      const students = await ctx.db.query("students").collect();
+      const student = students.find((s) => s.profileId === profile._id);
+      if (student) studentId = student._id;
+    }
+
+    if (profile.role === "student") {
+      const allowedTables = ["examAttempts", "examAnswers", "uploads", "auditLogs"];
+      if (!allowedTables.includes(args.table)) {
+        throw new Error(`Unauthorized mutation to table ${args.table}`);
+      }
+
+      if (args.table === "examAttempts") {
+        if (args.action === "update") {
+          const updateValues = (args.values ?? {}) as Record<string, unknown>;
+          const source = (await ctx.db.query("examAttempts").take(10000)) as Array<Record<string, unknown>>;
+          let matches = source.filter(row => row.studentId === studentId);
+          for (const filter of args.filters ?? []) {
+            matches = matches.filter((row) => matchesFilter(row, filter));
+          }
+
+          if (matches.length > 0) {
+            const attemptToUpdate = matches[0];
+            const answers = await ctx.db
+              .query("examAnswers")
+              .withIndex("by_attempt", (q: any) => q.eq("attemptId", attemptToUpdate._id as any))
+              .collect();
+
+            const exam = (await ctx.db.get(attemptToUpdate.examId as any)) as any;
+            let courseId = exam?.courseId;
+            if (!courseId && answers.length > 0) {
+              const q = (await ctx.db.get(answers[0].questionId)) as any;
+              courseId = q?.courseId;
+            }
+
+            let calculatedScore = 0;
+            let totalMarks = 0;
+
+            if (courseId) {
+              const questions = await ctx.db
+                .query("questions")
+                .withIndex("by_course", (q: any) => q.eq("courseId", courseId))
+                .collect();
+
+              const questionsMap = new Map(questions.map(q => [q._id.toString(), q]));
+              totalMarks = questions.reduce((sum, q) => sum + (q.marks || 1), 0);
+
+              for (const ans of answers) {
+                const q = questionsMap.get(ans.questionId.toString());
+                if (q) {
+                  if (ans.selectedOption === q.correctOption) {
+                    calculatedScore += (q.marks || 1);
+                  }
+                }
+              }
+            }
+
+            const calculatedPercentage = totalMarks > 0 ? (calculatedScore * 100) / totalMarks : 0;
+            const calculatedIsPassed = calculatedPercentage >= 45;
+
+            updateValues.score = calculatedScore;
+            updateValues.percentage = calculatedPercentage;
+            updateValues.isPassed = calculatedIsPassed;
+            updateValues.submittedAt = new Date().toISOString();
+            updateValues.status = updateValues.status || 'submitted';
+          }
+        }
+      }
+
+      if (args.table === "examAnswers") {
+        const values = Array.isArray(args.values) ? args.values : [args.values ?? {}];
+        for (const val of values) {
+          if (val.questionId) {
+            const q = (await ctx.db.get(val.questionId)) as any;
+            if (q) {
+              val.isCorrect = val.selectedOption === q.correctOption;
+            }
+          }
+        }
+      }
+    }
 
     const applyTimestamps = (input: Record<string, unknown>) => {
       const copy = { ...input };
