@@ -116,6 +116,9 @@ export default defineSchema({
     score: v.optional(v.number()),
     percentage: v.optional(v.number()),
     isPassed: v.optional(v.boolean()),
+    questionIds: v.optional(v.array(v.id("questions"))),
+    optionOrderMap: v.optional(v.record(v.id("questions"), v.array(v.number()))),
+    selectedAnswersMap: v.optional(v.record(v.id("questions"), v.number())),
     createdAt: v.number(),
     updatedAt: v.number(),
   })
