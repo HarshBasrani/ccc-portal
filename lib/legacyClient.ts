@@ -329,6 +329,7 @@ class LegacyQueryBuilder {
 
 export const legacyClient: any = {
   auth: {
+    // Cache-bust comment to force Vercel redeployment and clear edge cache
     getUser: async () => {
       const session = getSession()
       if (!session?.profileId || !session?.token) {
