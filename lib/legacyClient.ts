@@ -331,7 +331,8 @@ export const legacyClient: any = {
   auth: {
     getUser: async () => {
       const session = getSession()
-      if (!session?.profileId) {
+      if (!session?.profileId || !session?.token) {
+        clearSession()
         return { data: { user: null }, error: null }
       }
 

@@ -349,7 +349,7 @@ export const mutateRows = mutation({
     }
 
     if (profile.role === "student") {
-      const allowedTables = ["examAttempts", "examAnswers", "uploads", "auditLogs"];
+      const allowedTables = ["examAttempts", "examAnswers", "uploads", "auditLogs", "students"];
       if (!allowedTables.includes(args.table)) {
         throw new Error(`Unauthorized mutation to table ${args.table}`);
       }
