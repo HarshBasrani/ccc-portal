@@ -9,14 +9,37 @@ export type AppSession = {
 
 const SESSION_KEY = "ccc_portal_session";
 
-export function getSession(): AppSession | null {
+function setCookie(name: string, value: string, days: number = 30) {
+  if (typeof window === "undefined") return;
+  let expires = "";
+  if (days) {
+    const date = new Date();
+    date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
+    expires = "; expires=" + date.toUTCString();
+  }
+  const secure = window.location.protocol === "https:" ? "; Secure" : "";
+  document.cookie = name + "=" + encodeURIComponent(value || "") + expires + "; path=/" + secure + "; SameSite=Lax";
+}
+
+function getCookie(name: string) {
   if (typeof window === "undefined") return null;
-  const raw = window.localStorage.getItem(SESSION_KEY);
+  const nameEQ = name + "=";
+  const ca = document.cookie.split(";");
+  for (let i = 0; i < ca.length; i++) {
+    let c = ca[i];
+    while (c.charAt(0) === " ") c = c.substring(1, c.length);
+    if (c.indexOf(nameEQ) === 0) return decodeURIComponent(c.substring(nameEQ.length, c.length));
+  }
+  return null;
+}
+
+export function getSession(): AppSession | null {
+  const raw = getCookie(SESSION_KEY);
   if (!raw) return null;
 
   try {
     const parsed = JSON.parse(raw) as AppSession;
-    if (!parsed?.profileId || !parsed?.email || !parsed?.role) {
+    if (!parsed?.profileId || !parsed?.email || !parsed?.role || !parsed?.token) {
       return null;
     }
     return parsed;
@@ -26,11 +49,9 @@ export function getSession(): AppSession | null {
 }
 
 export function setSession(session: AppSession): void {
-  if (typeof window === "undefined") return;
-  window.localStorage.setItem(SESSION_KEY, JSON.stringify(session));
+  setCookie(SESSION_KEY, JSON.stringify(session));
 }
 
 export function clearSession(): void {
-  if (typeof window === "undefined") return;
-  window.localStorage.removeItem(SESSION_KEY);
+  setCookie(SESSION_KEY, "", -1);
 }

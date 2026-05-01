@@ -3,6 +3,7 @@ import { useEffect, useState, useCallback, useRef } from 'react'
 import { useRouter } from 'next/router'
 import Head from 'next/head'
 import { db } from '../../lib/dbClient'
+import { getSession } from '../../lib/session'
 
 interface Exam {
   id: string
@@ -526,8 +527,8 @@ export default function ExamEngine() {
         }
         
         try {
-          const rawSession = localStorage.getItem('ccc_portal_session')
-          const sessionToken = rawSession ? JSON.parse(rawSession).token : undefined
+          const session = getSession()
+          const sessionToken = session?.token
           
           navigator.sendBeacon(
             '/api/exam/emergency-save',

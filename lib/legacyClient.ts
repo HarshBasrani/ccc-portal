@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { ConvexHttpClient } from 'convex/browser'
+import { getSession, setSession, clearSession } from './session'
 
 type LegacyResponse<T = unknown> = {
   data: T
@@ -9,7 +10,7 @@ type LegacyResponse<T = unknown> = {
 
 type Role = 'admin' | 'student'
 
-const SESSION_KEY = 'ccc_portal_session'
+
 
 const TABLE_MAP: Record<string, string> = {
   profiles: 'profiles',
@@ -138,33 +139,7 @@ const getConvexClient = () => {
   return new ConvexHttpClient(url)
 }
 
-const getSession = () => {
-  if (typeof window === 'undefined') return null
-  const raw = window.localStorage.getItem(SESSION_KEY)
-  if (!raw) return null
-  try {
-    return JSON.parse(raw) as {
-      profileId: string
-      email: string
-      fullName: string
-      role: Role
-      enrollmentNo?: string
-      token?: string
-    }
-  } catch {
-    return null
-  }
-}
-
-const setSession = (session: { profileId: string; email: string; fullName: string; role: Role; enrollmentNo?: string; token?: string }) => {
-  if (typeof window === 'undefined') return
-  window.localStorage.setItem(SESSION_KEY, JSON.stringify(session))
-}
-
-const clearSession = () => {
-  if (typeof window === 'undefined') return
-  window.localStorage.removeItem(SESSION_KEY)
-}
+// Session functions now imported from ./session
 
 class LegacyQueryBuilder {
   private operation: 'select' | 'insert' | 'update' | 'upsert' | 'delete' = 'select'
