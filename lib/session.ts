@@ -7,7 +7,7 @@ export type AppSession = {
   token?: string;
 };
 
-const SESSION_KEY = "ccc_portal_session";
+const SESSION_KEY = "ccc_session_v2";
 
 function setCookie(name: string, value: string, days: number = 30) {
   if (typeof window === "undefined") return;
