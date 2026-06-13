@@ -11,6 +11,16 @@ interface Question {
   option_c: string
   option_d: string
   correct_option: string
+  question_en?: string
+  question_gu?: string
+  optionA_en?: string
+  optionA_gu?: string
+  optionB_en?: string
+  optionB_gu?: string
+  optionC_en?: string
+  optionC_gu?: string
+  optionD_en?: string
+  optionD_gu?: string
 }
 
 export default function MockExam() {
@@ -21,6 +31,7 @@ export default function MockExam() {
   const [loading, setLoading] = useState(true)
   const [timeLeft, setTimeLeft] = useState(3000) // 50 minutes = 3000 seconds
   const [examStarted, setExamStarted] = useState(false)
+  const [language, setLanguage] = useState<'EN' | 'GU'>('EN')
 
   useEffect(() => {
     fetchRandomQuestions()
@@ -53,9 +64,18 @@ export default function MockExam() {
       if (error) throw error
 
       if (data && data.length > 0) {
-        // Shuffle and take first 50
-        const shuffled = data.sort(() => Math.random() - 0.5).slice(0, 50)
-        setQuestions(shuffled)
+        // Filter unique questions by question_text to avoid duplicates
+        const uniqueData = Array.from(new Map(data.map((q: any) => [q.question_text?.trim().toLowerCase(), q])).values()) as Question[]
+        
+        // Fisher-Yates shuffle
+        let shuffled = [...uniqueData]
+        for (let i = shuffled.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+        }
+        
+        // Take first 50
+        setQuestions(shuffled.slice(0, 50))
       }
 
       setLoading(false)
@@ -315,27 +335,62 @@ export default function MockExam() {
                 <div className="card-body p-4">
                   <div className="d-flex justify-content-between align-items-center mb-3">
                     <span className="badge bg-primary">Question {currentQuestion + 1}</span>
-                    {answers[currentQuestion] && (
-                      <span className="badge bg-success">Answered</span>
-                    )}
+                    <div className="d-flex align-items-center gap-3">
+                      <div className="btn-group btn-group-sm" role="group" aria-label="Language Toggle">
+                        <button
+                          type="button"
+                          className={`btn ${language === 'EN' ? 'btn-dark' : 'btn-outline-dark'}`}
+                          onClick={() => setLanguage('EN')}
+                        >
+                          EN
+                        </button>
+                        <button
+                          type="button"
+                          className={`btn ${language === 'GU' ? 'btn-dark' : 'btn-outline-dark'}`}
+                          onClick={() => setLanguage('GU')}
+                        >
+                          ગુજરાતી
+                        </button>
+                      </div>
+                      {answers[currentQuestion] && (
+                        <span className="badge bg-success">Answered</span>
+                      )}
+                    </div>
                   </div>
                   
-                  <h4 className="mb-4">{currentQ.question_text}</h4>
+                  <h4 className="mb-4">
+                    {language === 'GU' && currentQ.question_gu 
+                      ? currentQ.question_gu 
+                      : currentQ.question_en || currentQ.question_text}
+                  </h4>
 
                   <div className="d-grid gap-3">
                     {['A', 'B', 'C', 'D'].map((option) => {
-                      const optionText = currentQ[`option_${option.toLowerCase()}` as keyof Question]
+                      let optionText = ''
+                      if (language === 'GU') {
+                        const guKey = `option${option}_gu` as keyof Question
+                        optionText = (currentQ[guKey] || '') as string
+                      }
+                      if (!optionText) {
+                        const enKey = `option${option}_en` as keyof Question
+                        optionText = (currentQ[enKey] || '') as string
+                      }
+                      if (!optionText) {
+                        const fallbackKey = `option_${option.toLowerCase()}` as keyof Question
+                        optionText = (currentQ[fallbackKey] || '') as string
+                      }
+                      
                       const isSelected = selectedAnswer === option
                       
                       return (
                         <button
                           key={option}
-                          className={`btn btn-lg text-start ${isSelected ? 'btn-primary' : 'btn-outline-secondary'}`}
+                          className={`btn btn-lg text-start ${isSelected ? 'btn-primary text-white' : 'btn-outline-secondary'}`}
                           onClick={() => handleAnswerSelect(option)}
                           style={{ 
                             padding: '1rem',
                             border: isSelected ? 'none' : '2px solid #dee2e6',
-                            background: isSelected ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' : 'white'
+                            background: isSelected ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' : undefined
                           }}
                         >
                           <strong>{option}.</strong> {optionText}

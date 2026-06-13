@@ -312,7 +312,8 @@ export default function ExamEngine() {
           return
         }
 
-        const shuffled = deterministicShuffle(questionData || [], attemptId as string);
+        const uniqueQuestionsData = Array.from(new Map(questionData.map((q: any) => [q.question_text?.trim().toLowerCase(), q])).values());
+        const shuffled = deterministicShuffle(uniqueQuestionsData, attemptId as string);
         const selectedQuestions = shuffled.slice(0, 100);
         setQuestions(selectedQuestions)
 
@@ -777,7 +778,8 @@ export default function ExamEngine() {
         return
       }
 
-      const shuffledQuestions = deterministicShuffle(questionsData || [], attemptId as string);
+      const uniqueQuestionsList = Array.from(new Map((questionsData || []).map((q: any) => [q.question_text?.trim().toLowerCase(), q])).values());
+      const shuffledQuestions = deterministicShuffle(uniqueQuestionsList, attemptId as string);
       const selectedQuestions = shuffledQuestions.slice(0, 100);
       setQuestions(selectedQuestions)
 

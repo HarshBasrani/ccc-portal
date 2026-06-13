@@ -129,9 +129,17 @@ export default function StudentDetailPage() {
     setUpdating(false)
   }
 
-  const formatDate = (dateString: string | null) => {
+  const formatDate = (dateString: any) => {
     if (!dateString) return '-'
-    const finalDate = dateString.includes('T') ? dateString : `${dateString}T00:00:00`
+    if (typeof dateString === 'number') {
+      return new Date(dateString).toLocaleDateString('en-IN', {
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric'
+      })
+    }
+    const str = String(dateString)
+    const finalDate = str.includes('T') ? str : `${str}T00:00:00`
     return new Date(finalDate).toLocaleDateString('en-IN', {
       day: '2-digit',
       month: 'short',

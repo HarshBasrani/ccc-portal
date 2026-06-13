@@ -869,10 +869,16 @@ export default function AdminCompletedExams() {
                                       borderRadius: '6px',
                                       padding: '0.25rem 0.5rem',
                                       fontSize: '0.75rem',
-                                      cursor: 'pointer'
+                                      cursor: 'pointer',
+                                      display: 'flex',
+                                      alignItems: 'center',
+                                      gap: '0.25rem'
                                     }}
                                   >
-                                    {updating === exam.id ? '...' : ''}
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                      <polyline points="20 6 9 17 4 12"/>
+                                    </svg>
+                                    {updating === exam.id ? 'Saving...' : 'Save'}
                                   </button>
                                   <button
                                     onClick={cancelEditing}
@@ -884,10 +890,17 @@ export default function AdminCompletedExams() {
                                       borderRadius: '6px',
                                       padding: '0.25rem 0.5rem',
                                       fontSize: '0.75rem',
-                                      cursor: 'pointer'
+                                      cursor: 'pointer',
+                                      display: 'flex',
+                                      alignItems: 'center',
+                                      gap: '0.25rem'
                                     }}
                                   >
-                                    
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                      <line x1="18" y1="6" x2="6" y2="18"/>
+                                      <line x1="6" y1="6" x2="18" y2="18"/>
+                                    </svg>
+                                    Cancel
                                   </button>
                                 </div>
                               </div>
