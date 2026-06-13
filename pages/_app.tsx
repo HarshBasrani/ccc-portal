@@ -1,4 +1,4 @@
-﻿import 'bootstrap/dist/css/bootstrap.min.css'
+import 'bootstrap/dist/css/bootstrap.min.css'
 import '../styles/globals.css'
 import type { AppProps } from 'next/app'
 import { useEffect } from 'react'
@@ -6,6 +6,7 @@ import { ConvexProvider } from 'convex/react'
 import Navbar from '../components/Navbar'
 import Footer from '../components/Footer'
 import Head from 'next/head'
+import Script from 'next/script'
 import { convex } from '../lib/convexClient'
 
 export default function App({ Component, pageProps }: AppProps) {
@@ -66,8 +67,25 @@ export default function App({ Component, pageProps }: AppProps) {
           <meta name="ethereum" content="disabled" />
           <meta name="metamask" content="disabled" />
         </Head>
+        
+        {/* Adsterra Scripts */}
+        <Script src="https://pl29730920.effectivecpmnetwork.com/2c/c4/ce/2cc4ce2f9f461c4cb37595081856cb1e.js" strategy="afterInteractive" />
+        <Script async data-cfasync="false" src="https://pl29730921.effectivecpmnetwork.com/e57657bc4fdd9ba3459eb7ac681d8b4b/invoke.js" strategy="afterInteractive" />
+        <Script src="https://pl29730923.effectivecpmnetwork.com/15/ba/58/15ba5877867cd345865c3ca6d1b25b9e.js" strategy="afterInteractive" />
+
         <Navbar />
         <Component {...pageProps} />
+        
+        {/* Adsterra Banner Container */}
+        <div id="container-e57657bc4fdd9ba3459eb7ac681d8b4b" className="d-flex justify-content-center my-3"></div>
+        
+        {/* Adsterra Direct Link */}
+        <div className="text-center pb-3" style={{ background: 'var(--light-bg)' }}>
+          <a href="https://www.effectivecpmnetwork.com/swfezf2k7u?key=d464c326b5e861de22f54a3f944d0d0a" target="_blank" rel="noopener noreferrer" className="text-muted small text-decoration-none">
+            Sponsored Link
+          </a>
+        </div>
+        
         <Footer />
       </>
     </ConvexProvider>
