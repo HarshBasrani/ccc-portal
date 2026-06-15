@@ -549,3 +549,56 @@ export const mutateRows = mutation({
     return { ids: [insertedId as unknown as string] };
   },
 });
+
+export const getMockQuestions = query({
+  args: {},
+  handler: async (ctx) => {
+    const questions = await ctx.db.query("questions").take(1000);
+    return questions.map(q => {
+      const { correctOption, ...rest } = q;
+      return {
+        ...rest,
+        id: q._id,
+        question_text: q.questionText,
+        option_a: q.optionA,
+        option_b: q.optionB,
+        option_c: q.optionC,
+        option_d: q.optionD,
+        correct_option: correctOption,
+        question_en: q.question_en,
+        question_gu: q.question_gu,
+        optionA_en: q.optionA_en,
+        optionA_gu: q.optionA_gu,
+        optionB_en: q.optionB_en,
+        optionB_gu: q.optionB_gu,
+        optionC_en: q.optionC_en,
+        optionC_gu: q.optionC_gu,
+        optionD_en: q.optionD_en,
+        optionD_gu: q.optionD_gu,
+      };
+    });
+  }
+});
+
+export const evaluateMockExam = query({
+  args: {
+    answers: v.array(v.object({
+      questionId: v.id("questions"),
+      selectedOption: v.string()
+    }))
+  },
+  handler: async (ctx, args) => {
+    let correct = 0;
+    for (const ans of args.answers) {
+      const q = await ctx.db.get(ans.questionId);
+      if (q && q.correctOption === ans.selectedOption) {
+        correct++;
+      }
+    }
+    return {
+      correct,
+      total: args.answers.length,
+      percentage: args.answers.length > 0 ? (correct / args.answers.length) * 100 : 0
+    };
+  }
+});

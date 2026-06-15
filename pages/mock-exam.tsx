@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react'
 import Head from 'next/head'
 import Link from 'next/link'
-import { legacyClient } from '../lib/legacyClient'
+import { convex } from '../lib/convexClient'
+import { api } from '../convex/_generated/api'
 
 interface Question {
   id: string
@@ -55,13 +56,8 @@ export default function MockExam() {
 
   const fetchRandomQuestions = async () => {
     try {
-      // Fetch all questions and randomly select 50
-      const { data, error } = await legacyClient
-        .from('questions')
-        .select('*')
-        .limit(1000)
-
-      if (error) throw error
+      // Fetch all questions using the new unauthenticated endpoint
+      const data = await convex.query(api.compat.getMockQuestions, {})
 
       if (data && data.length > 0) {
         // Filter unique questions by question_text to avoid duplicates
