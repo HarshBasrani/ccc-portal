@@ -99,3 +99,20 @@ export const createStudent = mutation({
     return { studentId, profileId };
   },
 });
+
+/**
+ * Deletes a student and their profile from Convex by studentId.
+ */
+export const deleteStudent = mutation({
+  args: { studentId: v.id("students") },
+  handler: async (ctx, args) => {
+    const student = await ctx.db.get(args.studentId);
+    if (!student) return;
+
+    await ctx.db.delete(args.studentId);
+
+    if (student.profileId) {
+      await ctx.db.delete(student.profileId);
+    }
+  },
+});

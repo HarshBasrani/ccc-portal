@@ -21,9 +21,10 @@ export default function AdminStudents() {
   const [error, setError] = useState<string | null>(null)
   const [students, setStudents] = useState<StudentRow[]>([])
   const [searchTerm, setSearchTerm] = useState('')
+  const [fetchLimit, setFetchLimit] = useState<number | 'all'>(50)
 
   const fetchStudents = async () => {
-    const { data, error: fetchError } = await legacyClient
+    let query = legacyClient
       .from('students')
       .select(`
         id,
@@ -34,6 +35,12 @@ export default function AdminStudents() {
         profiles:profile_id ( full_name, email )
       `)
       .order('created_at', { ascending: false })
+
+    if (fetchLimit !== 'all') {
+      query = query.limit(fetchLimit)
+    }
+
+    const { data, error: fetchError } = await query
 
     if (fetchError) {
       setError(fetchError.message)
@@ -86,6 +93,12 @@ export default function AdminStudents() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [router])
 
+  useEffect(() => {
+    if (!loading) {
+      fetchStudents()
+    }
+  }, [fetchLimit])
+
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-IN', {
@@ -113,6 +126,25 @@ export default function AdminStudents() {
     (student.email?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
     (student.enrollment_no?.toLowerCase() || '').includes(searchTerm.toLowerCase())
   )
+
+  const handleDelete = async (id: string, profileId: string, name: string) => {
+    if (window.confirm(`Are you sure you want to delete ${name}? This action cannot be undone.`)) {
+      try {
+        const { error: studentError } = await legacyClient.from('students').delete().eq('id', id)
+        if (studentError) throw new Error(studentError.message)
+        
+        if (profileId) {
+          const { error: profileError } = await legacyClient.from('profiles').delete().eq('id', profileId)
+          if (profileError) throw new Error(profileError.message)
+        }
+        
+        setStudents(students.filter(s => s.id !== id))
+      } catch (e: any) {
+        alert(`Error deleting student: ${e.message || 'Unknown error'}`)
+        console.error("Delete failed", e)
+      }
+    }
+  }
 
   if (loading) {
     return (
@@ -263,7 +295,18 @@ export default function AdminStudents() {
                 </svg>
                 Student List
               </h5>
-              <div className="d-flex align-items-center gap-3">
+              <div className="d-flex flex-column flex-sm-row align-items-center gap-3">
+                <select
+                  className="form-select"
+                  value={fetchLimit}
+                  onChange={(e) => setFetchLimit(e.target.value === 'all' ? 'all' : Number(e.target.value))}
+                  style={{ borderRadius: '10px', border: '2px solid #e9ecef', width: 'auto', minWidth: '130px' }}
+                >
+                  <option value={10}>10 Students</option>
+                  <option value={50}>50 Students</option>
+                  <option value={100}>100 Students</option>
+                  <option value="all">All Students</option>
+                </select>
                 <div style={{ position: 'relative' }}>
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#6c757d" strokeWidth="2" 
                     style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)' }}>
@@ -397,16 +440,29 @@ export default function AdminStudents() {
                               </div>
                             </td>
                             <td className="text-center">
-                              <Link
-                                href={`/admin/students/${student.id}`}
-                                className="btn-premium btn-premium-outline btn-premium-sm"
-                              >
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
-                                  <circle cx="12" cy="12" r="3"/>
-                                </svg>
-                                View
-                              </Link>
+                              <div className="d-flex align-items-center justify-content-center gap-2">
+                                <Link
+                                  href={`/admin/students/${student.id}`}
+                                  className="btn-premium btn-premium-outline btn-premium-sm"
+                                >
+                                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                                    <circle cx="12" cy="12" r="3"/>
+                                  </svg>
+                                  View
+                                </Link>
+                                <button
+                                  onClick={() => handleDelete(student.id, student.profile_id, student.full_name || student.enrollment_no || 'this student')}
+                                  className="btn-premium btn-premium-sm"
+                                  style={{ background: '#fee2e2', color: '#dc2626', border: '1px solid #fca5a5' }}
+                                >
+                                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                    <polyline points="3 6 5 6 21 6"></polyline>
+                                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                                  </svg>
+                                  Delete
+                                </button>
+                              </div>
                             </td>
                           </tr>
                         )

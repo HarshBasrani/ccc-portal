@@ -1,6 +1,7 @@
 // pages/login.tsx
 import Head from 'next/head'
 import Link from 'next/link'
+import ParticleBackground from '../components/ParticleBackground'
 
 export default function LoginPage() {
   return (
@@ -11,8 +12,9 @@ export default function LoginPage() {
       </Head>
 
       {/* Hero Section */}
-      <section className="hero-section">
-        <div className="hero-bg-pattern"></div>
+      <section className="hero-section" style={{ position: 'relative', overflow: 'hidden' }}>
+        <ParticleBackground />
+        <div className="hero-bg-pattern" style={{ opacity: 0.1 }}></div>
         
         {/* Floating Elements */}
         <div style={{
@@ -36,7 +38,7 @@ export default function LoginPage() {
           animation: 'float 6s ease-in-out infinite reverse'
         }}></div>
 
-        <div className="hero-content">
+        <div className="hero-content" style={{ position: 'relative', zIndex: 2 }}>
           {/* Badge */}
           <div className="hero-badge fade-in">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">

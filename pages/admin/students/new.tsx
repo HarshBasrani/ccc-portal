@@ -80,6 +80,7 @@ export default function AdminAddStudentPage() {
   // ── Submit handler with dual-upload flow ──────────────────────
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
+    if (saving) return // Prevent double submission
     setError(null)
     setSuccess(null)
 

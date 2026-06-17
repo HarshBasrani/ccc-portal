@@ -31,6 +31,9 @@ export default function AssignStudents() {
   const [students, setStudents] = useState<Student[]>([])
   const [selectedStudents, setSelectedStudents] = useState<string[]>([])
   const [assignedStudents, setAssignedStudents] = useState<string[]>([])
+  
+  const [searchTerm, setSearchTerm] = useState('')
+  const [fetchLimit, setFetchLimit] = useState<number | 'all'>(50)
 
   useEffect(() => {
     if (!id) return
@@ -54,12 +57,19 @@ export default function AssignStudents() {
         return
       }
 
-      await Promise.all([fetchExam(), fetchStudents(), fetchAssignedStudents()])
+      await Promise.all([fetchExam(), fetchAssignedStudents()])
+      await fetchStudents() // Fetch students based on default filter
       setLoading(false)
     }
 
     checkAdminAndFetch()
   }, [id, router])
+
+  useEffect(() => {
+    if (id && !loading) {
+      fetchStudents()
+    }
+  }, [searchTerm, fetchLimit])
 
   const fetchExam = async () => {
     const { data } = await db
@@ -74,7 +84,7 @@ export default function AssignStudents() {
   }
 
   const fetchStudents = async () => {
-    const { data, error } = await db
+    let query = db
       .from('students')
       .select(`
         id,
@@ -85,16 +95,35 @@ export default function AssignStudents() {
           email
         )
       `)
-      .order('enrollment_no', { ascending: true })
+      
+    // Sort by created_at descending to guarantee strictly recent students
+    query = query.order('created_at', { ascending: false })
+
+    if (fetchLimit !== 'all') {
+      query = query.limit(fetchLimit as number)
+    }
+
+    const { data, error } = await query
 
     if (data) {
-      const formatted = data.map((student: any) => ({
+      let formatted = data.map((student: any) => ({
         id: student.id,
         profile_id: student.profile_id,
         enrollment_no: student.enrollment_no || '-',
         name: student.profiles?.full_name || '-',
         email: student.profiles?.email || '-'
       }))
+
+      // Apply frontend search filter if search term exists
+      if (searchTerm) {
+        const lowerSearch = searchTerm.toLowerCase()
+        formatted = formatted.filter((s: Student) => 
+          s.name.toLowerCase().includes(lowerSearch) || 
+          s.enrollment_no.toLowerCase().includes(lowerSearch) ||
+          s.email.toLowerCase().includes(lowerSearch)
+        )
+      }
+
       setStudents(formatted)
     }
   }
@@ -221,15 +250,40 @@ export default function AssignStudents() {
 
         <form onSubmit={handleSubmit}>
           <div className="card mb-3">
-            <div className="card-header d-flex justify-content-between align-items-center">
-              <span>Select Students</span>
-              <button
-                type="button"
-                className="btn btn-sm btn-outline-primary"
-                onClick={handleSelectAll}
-              >
-                {selectedStudents.length === students.length ? 'Deselect All' : 'Select All'}
-              </button>
+            <div className="card-header d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2">
+              <span className="fw-medium">Select Students</span>
+              
+              <div className="d-flex flex-column flex-sm-row gap-2">
+                <input
+                  type="text"
+                  className="form-control form-control-sm"
+                  placeholder="Search students..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  style={{ minWidth: '200px' }}
+                />
+                
+                <select
+                  className="form-select form-select-sm"
+                  value={fetchLimit}
+                  onChange={(e) => setFetchLimit(e.target.value === 'all' ? 'all' : Number(e.target.value))}
+                  style={{ width: 'auto' }}
+                >
+                  <option value={10}>10 Students</option>
+                  <option value={50}>50 Students</option>
+                  <option value={100}>100 Students</option>
+                  <option value="all">All Students</option>
+                </select>
+
+                <button
+                  type="button"
+                  className="btn btn-sm btn-outline-primary whitespace-nowrap"
+                  onClick={handleSelectAll}
+                  style={{ whiteSpace: 'nowrap' }}
+                >
+                  {selectedStudents.length === students.length && students.length > 0 ? 'Deselect All' : 'Select All'}
+                </button>
+              </div>
             </div>
             <div className="card-body" style={{ maxHeight: '400px', overflowY: 'auto' }}>
               {students.length === 0 ? (
