@@ -85,55 +85,59 @@ export default function Navbar() {
           {/* Desktop Links */}
           <div className="desktop-nav d-none d-lg-flex">
             
-            {/* Unified Portal Menu for everyone */}
-            <div className="universal-dropdown-container" onClick={(e) => e.stopPropagation()}>
-              <button 
-                className={`portal-menu-btn ${showMenu ? 'active' : ''}`}
-                onClick={() => setShowMenu(!showMenu)}
-              >
-                <span className="menu-text">Portal Menu</span>
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className={`arrow-icon ${showMenu ? 'open' : ''}`}>
-                  <polyline points="6 9 12 15 18 9"/>
-                </svg>
-              </button>
+            {/* Unified Portal Menu based on role */}
+            {!loading && user && (
+              <div className="universal-dropdown-container" onClick={(e) => e.stopPropagation()}>
+                <button 
+                  className={`portal-menu-btn ${showMenu ? 'active' : ''}`}
+                  onClick={() => setShowMenu(!showMenu)}
+                >
+                  <span className="menu-text">Portal Menu</span>
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className={`arrow-icon ${showMenu ? 'open' : ''}`}>
+                    <polyline points="6 9 12 15 18 9"/>
+                  </svg>
+                </button>
 
-              {showMenu && (
-                <div className="universal-dropdown-menu">
-                  <div className="menu-group">
-                    <div className="menu-label">Admin Area</div>
-                    <Link href="/admin/dashboard" className={`menu-item ${isActive('/admin/dashboard') ? 'active' : ''}`}>
-                      Dashboard
-                    </Link>
-                    <Link href="/admin/students" className={`menu-item ${isActive('/admin/students') ? 'active' : ''}`}>
-                      Manage Students
-                    </Link>
-                    <Link href="/admin/exams" className={`menu-item ${isActive('/admin/exams') ? 'active' : ''}`}>
-                      Exams & Questions
-                    </Link>
-                    <Link href="/admin/certificates" className={`menu-item ${isActive('/admin/certificates') ? 'active' : ''}`}>
-                      Certificates
-                    </Link>
+                {showMenu && (
+                  <div className="universal-dropdown-menu">
+                    {role === 'admin' && (
+                      <div className="menu-group">
+                        <div className="menu-label">Admin Area</div>
+                        <Link href="/admin/dashboard" className={`menu-item ${isActive('/admin/dashboard') ? 'active' : ''}`}>
+                          Dashboard
+                        </Link>
+                        <Link href="/admin/students" className={`menu-item ${isActive('/admin/students') ? 'active' : ''}`}>
+                          Manage Students
+                        </Link>
+                        <Link href="/admin/exams" className={`menu-item ${isActive('/admin/exams') ? 'active' : ''}`}>
+                          Exams & Questions
+                        </Link>
+                        <Link href="/admin/certificates" className={`menu-item ${isActive('/admin/certificates') ? 'active' : ''}`}>
+                          Certificates
+                        </Link>
+                      </div>
+                    )}
+                    
+                    {role === 'student' && (
+                      <div className="menu-group">
+                        <div className="menu-label">Student Area</div>
+                        <Link href="/student/dashboard" className={`menu-item ${isActive('/student/dashboard') ? 'active' : ''}`}>
+                          Student Dashboard
+                        </Link>
+                        <Link href="/student/exams" className={`menu-item ${isActive('/student/exams') ? 'active' : ''}`}>
+                          My Exams
+                        </Link>
+                        <Link href="/student/results" className={`menu-item ${isActive('/student/results') ? 'active' : ''}`}>
+                          My Results
+                        </Link>
+                      </div>
+                    )}
                   </div>
-                  
-                  <div className="menu-divider"></div>
-                  
-                  <div className="menu-group">
-                    <div className="menu-label">Student Area</div>
-                    <Link href="/student/dashboard" className={`menu-item ${isActive('/student/dashboard') ? 'active' : ''}`}>
-                      Student Dashboard
-                    </Link>
-                    <Link href="/student/exams" className={`menu-item ${isActive('/student/exams') ? 'active' : ''}`}>
-                      My Exams
-                    </Link>
-                    <Link href="/student/results" className={`menu-item ${isActive('/student/results') ? 'active' : ''}`}>
-                      My Results
-                    </Link>
-                  </div>
-                </div>
-              )}
-            </div>
+                )}
+              </div>
+            )}
 
-            <div className="nav-divider"></div>
+            {user && <div className="nav-divider"></div>}
 
             <Link href="/mock-exam" className={`nav-pill ${isActive('/mock-exam') ? 'active' : ''}`}>
               Mock Exam
@@ -185,12 +189,31 @@ export default function Navbar() {
         {showMobileMenu && (
           <div className="mobile-nav-menu d-lg-none">
             <div className="mobile-nav-inner">
+              {!loading && user && (
+                <div className="mobile-group">
+                  <div className="mobile-label">Portal Access</div>
+                  {role === 'admin' && (
+                    <>
+                      <Link href="/admin/dashboard" className="mobile-item">Admin Dashboard</Link>
+                      <Link href="/admin/students" className="mobile-item">Manage Students</Link>
+                      <Link href="/admin/exams" className="mobile-item">Exams & Questions</Link>
+                    </>
+                  )}
+                  {role === 'student' && (
+                    <>
+                      <Link href="/student/dashboard" className="mobile-item">Student Dashboard</Link>
+                      <Link href="/student/exams" className="mobile-item">My Exams</Link>
+                      <Link href="/student/results" className="mobile-item">My Results</Link>
+                    </>
+                  )}
+                </div>
+              )}
+
               <div className="mobile-group">
-                <div className="mobile-label">Portal Access</div>
-                <Link href="/admin/dashboard" className="mobile-item">Admin Dashboard</Link>
-                <Link href="/student/dashboard" className="mobile-item">Student Dashboard</Link>
+                <div className="mobile-label">Public</div>
                 <Link href="/mock-exam" className="mobile-item">Mock Exam</Link>
                 <Link href="/verify-certificate" className="mobile-item">Verify Certificate</Link>
+                <Link href="/about" className="mobile-item">About</Link>
               </div>
               
               {!loading && user ? (
