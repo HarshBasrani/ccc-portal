@@ -151,29 +151,44 @@ export default function StudentDashboard() {
 
   const canStartExam = (assignment: ExamAssignment): boolean => {
     const exam = assignment.exams
-    const today = getTodayDate()
-    const now = getCurrentTime()
+    const now = new Date()
+    
+    const startTimeStr = exam.start_time.length <= 5 ? `${exam.start_time}:00` : exam.start_time;
+    const endTimeStr = exam.end_time.length <= 5 ? `${exam.end_time}:00` : exam.end_time;
+    const examStart = new Date(`${exam.exam_date}T${startTimeStr}`)
+    const examEnd = new Date(`${exam.exam_date}T${endTimeStr}`)
 
     return (
       assignment.status !== 'completed' &&
       exam.status !== 'cancelled' &&
-      today === exam.exam_date &&
-      now >= exam.start_time.slice(0, 5) &&
-      now <= exam.end_time.slice(0, 5)
+      now >= examStart &&
+      now <= examEnd
     )
   }
 
   const getStatusText = (assignment: ExamAssignment): string => {
     const exam = assignment.exams
-    const today = getTodayDate()
-    const now = getCurrentTime()
+    const now = new Date()
+    
+    const startTimeStr = exam.start_time.length <= 5 ? `${exam.start_time}:00` : exam.start_time;
+    const endTimeStr = exam.end_time.length <= 5 ? `${exam.end_time}:00` : exam.end_time;
+    const examStart = new Date(`${exam.exam_date}T${startTimeStr}`)
+    const examEnd = new Date(`${exam.exam_date}T${endTimeStr}`)
 
     if (assignment.status === 'completed') return 'Completed'
     if (exam.status === 'cancelled') return 'Cancelled'
-    if (today < exam.exam_date) return 'Scheduled'
-    if (today > exam.exam_date) return 'Expired'
-    if (now < exam.start_time.slice(0, 5)) return 'Not Started'
-    if (now > exam.end_time.slice(0, 5)) return 'Time Closed'
+    
+    if (now < examStart) {
+      const year = now.getFullYear()
+      const month = String(now.getMonth() + 1).padStart(2, '0')
+      const day = String(now.getDate()).padStart(2, '0')
+      const todayStr = `${year}-${month}-${day}`
+      
+      if (exam.exam_date > todayStr) return 'Scheduled'
+      return 'Not Started'
+    }
+    
+    if (now > examEnd) return 'Time Closed'
     return 'Available'
   }
 

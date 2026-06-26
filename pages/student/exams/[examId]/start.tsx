@@ -139,36 +139,28 @@ export default function StartExam() {
   const checkTimeWindow = (examData: Exam) => {
     const now = new Date()
     
-    // Get today's date in yyyy-mm-dd format
-    const year = now.getFullYear()
-    const month = String(now.getMonth() + 1).padStart(2, '0')
-    const day = String(now.getDate()).padStart(2, '0')
-    const todayStr = `${year}-${month}-${day}`
+    // Construct proper Date objects by combining date and time
+    // Ensure time string has seconds to prevent parsing issues
+    const startTimeStr = examData.start_time.length <= 5 ? `${examData.start_time}:00` : examData.start_time;
+    const endTimeStr = examData.end_time.length <= 5 ? `${examData.end_time}:00` : examData.end_time;
     
-    const examDate = examData.exam_date
+    const examStart = new Date(`${examData.exam_date}T${startTimeStr}`)
+    const examEnd = new Date(`${examData.exam_date}T${endTimeStr}`)
 
-    // Check if today is exam date
-    if (todayStr !== examDate) {
-      if (todayStr < examDate) {
-        setTimeStatus(`This exam is scheduled for ${formatDate(examDate)}.`)
-        setCanStart(false)
-        return
+    if (now < examStart) {
+      // Check if it's a future date
+      const year = now.getFullYear()
+      const month = String(now.getMonth() + 1).padStart(2, '0')
+      const day = String(now.getDate()).padStart(2, '0')
+      const todayStr = `${year}-${month}-${day}`
+      
+      if (examData.exam_date > todayStr) {
+        setTimeStatus(`This exam is scheduled for ${formatDate(examData.exam_date)}.`)
       } else {
-        setTimeStatus('Exam date has passed.')
-        setCanStart(false)
-        return
+        setTimeStatus(`Exam hasn't started yet. Starts at ${formatTime(examData.start_time)}.`)
       }
-    }
-
-    // Check time window
-    const currentTime = now.toTimeString().slice(0, 5)
-    const startTime = examData.start_time.slice(0, 5)
-    const endTime = examData.end_time.slice(0, 5)
-
-    if (currentTime < startTime) {
-      setTimeStatus(`Exam hasn't started yet. Starts at ${startTime}.`)
       setCanStart(false)
-    } else if (currentTime > endTime) {
+    } else if (now > examEnd) {
       setTimeStatus('Exam window has closed.')
       setCanStart(false)
     } else {
