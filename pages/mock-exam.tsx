@@ -176,13 +176,15 @@ export default function MockExam() {
                       <button 
                         className="btn btn-primary btn-lg"
                         onClick={() => setExamStarted(true)}
+                        disabled={questions.length === 0}
                         style={{ 
-                          background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                          background: questions.length === 0 ? '#cccccc' : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
                           border: 'none',
-                          padding: '1rem'
+                          padding: '1rem',
+                          cursor: questions.length === 0 ? 'not-allowed' : 'pointer'
                         }}
                       >
-                        Start Mock Exam
+                        {questions.length === 0 ? 'No Questions Available' : 'Start Mock Exam'}
                       </button>
                       <Link href="/" className="btn btn-outline-secondary btn-lg">
                         Back to Home
@@ -291,6 +293,20 @@ export default function MockExam() {
 
   const currentQ = questions[currentQuestion]
   const selectedAnswer = answers[currentQuestion]
+
+  if (!currentQ) {
+    return (
+      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f8f9fa' }}>
+        <div style={{ textAlign: 'center' }}>
+          <h3>No questions available</h3>
+          <p className="mt-3">Please try again later or contact support.</p>
+          <Link href="/" className="btn btn-primary mt-3">
+            Back to Home
+          </Link>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <>
