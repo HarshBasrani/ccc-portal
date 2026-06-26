@@ -91,7 +91,7 @@ export default function ExamEngine() {
   const [questions, setQuestions] = useState<Question[]>([])
   const [answers, setAnswers] = useState<Record<string, string>>({})
   const [currentIndex, setCurrentIndex] = useState(0)
-  const [remainingTime, setRemainingTime] = useState<number>(0)
+  const [remainingTime, setRemainingTime] = useState<number | null>(null)
   const [lastSaveTime, setLastSaveTime] = useState<Date | null>(null)
   const [saveStatus, setSaveStatus] = useState<'saved' | 'saving' | 'error' | 'offline' | 'unsaved'>('saved')
   const [isOnline, setIsOnline] = useState(true)
@@ -394,10 +394,10 @@ export default function ExamEngine() {
 
   // TIMER LOGIC FIX
   useEffect(() => {
-    if (loading || remainingTime <= 0) return
+    if (loading || remainingTime === null || remainingTime <= 0) return
 
     const timer = setInterval(() => {
-      setRemainingTime((prev) => Math.max(0, prev - 1))
+      setRemainingTime((prev) => prev !== null ? Math.max(0, prev - 1) : null)
     }, 1000)
 
     return () => clearInterval(timer)
@@ -471,14 +471,16 @@ export default function ExamEngine() {
   // SEPARATE AUTO-SUBMIT TRIGGER
   useEffect(() => {
     if (
-      remainingTime === 0 && 
+      !loading &&
+      remainingTime !== null &&
+      remainingTime <= 0 && 
       attempt && 
       !submitting && 
       attempt.status === 'in_progress'
     ) {
       handleSubmit(true)
     }
-  }, [remainingTime, attempt, submitting, handleSubmit])
+  }, [loading, remainingTime, attempt, submitting, handleSubmit])
 
   // SELECT OPTION
   const handleSelectOption = (questionId: string, selected: string) => {
@@ -537,8 +539,8 @@ export default function ExamEngine() {
   const selectedOption = answers[currentQuestion.id]
   const answeredCount = Object.keys(answers).length
   const totalQuestions = questions.length
-  const isTimerCritical = remainingTime < 300
-  const isTimerDanger = remainingTime < 60
+  const isTimerCritical = remainingTime !== null && remainingTime <= 180
+  const isTimerDanger = remainingTime !== null && remainingTime <= 60
 
   return (
     <>
@@ -582,7 +584,7 @@ export default function ExamEngine() {
             <div className="col-md-4 text-md-end mt-2 mt-md-0">
               <span className="badge bg-info me-2">{answeredCount}/{totalQuestions} Answered</span>
               <span className={`badge fs-5 ${isTimerDanger ? 'bg-danger' : isTimerCritical ? 'bg-warning text-dark' : 'bg-success'}`}>
-                Time Left: {formatTime(remainingTime)}
+                Time Left: {remainingTime !== null ? formatTime(remainingTime) : '...'}
               </span>
             </div>
           </div>
@@ -713,7 +715,7 @@ export default function ExamEngine() {
                   <div className="alert alert-info small mb-2">
                     <strong> Review Before Submit:</strong><br />
                     Answered: {answeredCount}/{totalQuestions} questions<br />
-                    Time remaining: {formatTime(remainingTime)}
+                    Time remaining: {remainingTime !== null ? formatTime(remainingTime) : '...'}
                   </div>
                   {answeredCount < totalQuestions && (
                     <div className="alert alert-warning small mb-2">
