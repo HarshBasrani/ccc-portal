@@ -22,7 +22,8 @@ export default function NewExam() {
     name: '',
     exam_date: '',
     start_time: '',
-    end_time: ''
+    end_time: '',
+    status: 'active'
   })
 
   useEffect(() => {
@@ -91,7 +92,7 @@ export default function NewExam() {
           start_time: formData.start_time,
           end_time: formData.end_time,
           duration_minutes: durationMinutes,
-          status: 'scheduled'
+          status: formData.status
         })
 
       if (insertError) {
@@ -214,6 +215,25 @@ export default function NewExam() {
                 required
               />
             </div>
+          </div>
+
+          <div className="mb-3">
+            <label htmlFor="status" className="form-label">
+              Status <span className="text-danger">*</span>
+            </label>
+            <select
+              className="form-select"
+              id="status"
+              name="status"
+              value={formData.status}
+              onChange={handleChange}
+              required
+            >
+              <option value="active">Active</option>
+              <option value="scheduled">Scheduled</option>
+              <option value="completed">Completed</option>
+              <option value="cancelled">Cancelled</option>
+            </select>
           </div>
 
           <div className="d-flex gap-2">
