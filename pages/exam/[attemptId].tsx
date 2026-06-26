@@ -257,7 +257,16 @@ export default function ExamEngine() {
         const shuffled = deterministicShuffle(uniqueQuestionsData, attemptId as string);
         setQuestions(shuffled.slice(0, 100))
 
-        const startTime = new Date(attemptData.started_at).getTime()
+        // Normalize started_at to ensure it's treated as UTC if the DB stripped the timezone marker
+        const startedAtStr = attemptData.started_at || new Date().toISOString()
+        const normalizedStartedAt = (startedAtStr.endsWith('Z') || startedAtStr.includes('+')) 
+            ? startedAtStr 
+            : `${startedAtStr}Z`.replace(' Z', 'Z') // Replace space before Z if any (e.g. '2026-06-26 11:52:00Z')
+        
+        // Handle postgres 'YYYY-MM-DD HH:mm:ss' format safely
+        const safeStartedAt = normalizedStartedAt.replace(' ', 'T')
+
+        const startTime = new Date(safeStartedAt).getTime()
         const now = new Date().getTime()
         const elapsedSeconds = Math.floor((now - startTime) / 1000)
         const totalSeconds = examData.duration_minutes * 60
