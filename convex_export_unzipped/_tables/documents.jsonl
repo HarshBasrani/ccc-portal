@@ -1,0 +1,12 @@
+{"name":"auditLogs","id":10001}
+{"name":"certificates","id":10002}
+{"name":"courses","id":10003}
+{"name":"examAnswers","id":10004}
+{"name":"examAssignments","id":10005}
+{"name":"examAttempts","id":10006}
+{"name":"exams","id":10007}
+{"name":"profiles","id":10008}
+{"name":"questions","id":10009}
+{"name":"students","id":10010}
+{"name":"uploads","id":10011}
+{"name":"sessions","id":10012}

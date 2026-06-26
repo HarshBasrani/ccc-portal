@@ -460,7 +460,20 @@ export const mutateRows = mutation({
       return { ids };
     }
 
-    const source = (await ctx.db.query(tableName).take(10000)) as Array<Record<string, unknown>>;
+    let source: Array<Record<string, unknown>> = [];
+    if (tableName === "examAnswers") {
+      const attemptFilter = (args.filters ?? []).find(f => f.field === "attemptId" && f.op === "eq");
+      if (attemptFilter) {
+        source = await ctx.db
+          .query("examAnswers")
+          .withIndex("by_attempt", (q) => q.eq("attemptId", attemptFilter.value as any))
+          .collect();
+      } else {
+        source = await ctx.db.query("examAnswers").collect();
+      }
+    } else {
+      source = await ctx.db.query(tableName).collect(); 
+    }
     let matches = source;
     for (const filter of args.filters ?? []) {
       matches = matches.filter((row) => matchesFilter(row, filter));
@@ -601,4 +614,56 @@ export const evaluateMockExam = query({
       percentage: args.answers.length > 0 ? (correct / args.answers.length) * 100 : 0
     };
   }
+});
+
+export const batchUpsertAnswers = mutation({
+  args: {
+    attemptId: v.id("examAttempts"),
+    answers: v.array(
+      v.object({
+        questionId: v.id("questions"),
+        selectedOption: v.string(),
+      })
+    ),
+  },
+  handler: async (ctx, args) => {
+    try {
+      const now = Date.now();
+      let savedCount = 0;
+
+      for (const ans of args.answers) {
+        const existing = await ctx.db
+          .query("examAnswers")
+          .withIndex("by_attempt_question", (q) =>
+            q.eq("attemptId", args.attemptId).eq("questionId", ans.questionId)
+          )
+          .unique();
+
+        const question = await ctx.db.get(ans.questionId);
+        const isCorrect = question ? question.correctOption === ans.selectedOption : false;
+
+        if (existing) {
+          await ctx.db.patch(existing._id, {
+            selectedOption: ans.selectedOption,
+            isCorrect,
+            updatedAt: now,
+          });
+        } else {
+          await ctx.db.insert("examAnswers", {
+            attemptId: args.attemptId,
+            questionId: ans.questionId,
+            selectedOption: ans.selectedOption,
+            isCorrect,
+            createdAt: now,
+            updatedAt: now,
+          });
+        }
+        savedCount++;
+      }
+
+      return { success: true, savedCount };
+    } catch (error: any) {
+      return { success: false, error: error.message };
+    }
+  },
 });
